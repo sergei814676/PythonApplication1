@@ -56,11 +56,13 @@ message_button.place(relx=.5, rely=.5, anchor="c")
 
 comboExample = ttk.Combobox(root, 
                             values=[
-                                    "Lineq", 
+                                    "NewOneNetwork", 
                                     "Polinel",
                                     "probanerset",
-                                    "NewOneNetwork",
-                                    "NewTwoNetwork"],
+                                    "Lineq",
+                                    "NewTwoNetwork",
+                                    "NewThreeNetwork",
+                                    "NewFourNetwork"],
                             state="readonly")
 comboExample.place(relx=.5, rely=.8, anchor="c")
 
