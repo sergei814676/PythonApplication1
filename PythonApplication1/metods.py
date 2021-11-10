@@ -584,6 +584,28 @@ def NewThreeNetwork ():
 
 
 
+
+
+
+def evaluation_training():
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 def choiceCombobox():#выбор функции
      if PythonApplication1.comboExample.get() == "probanerset":
              probanerset()
