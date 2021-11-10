@@ -300,7 +300,7 @@ def NewOneNetwork ():  #ФУНКЦИЯ,из за которой ошибка, н
 
 
 def NewFourNetwork(): #сеть LSTM
- url='E:/data3.csv'
+ url='E:/data2.csv'
  #url=PythonApplication1.message.get()
  dff = pd.read_csv(url, names=['val','vale'],decimal='.', delimiter=',', dayfirst=True)
  #x_data = np.linspace (-0.5, 0.5, 200) [:, np.newaxis] # ������������ 200 �����, ���������� �������������� �� -0,5 �� 0,5, �������� ������� �� 200 ����� � ������ �������
@@ -328,27 +328,11 @@ def NewFourNetwork(): #сеть LSTM
 
  batch_size = 32
  
- x_input=dff['val'].to_numpy()
- y_input=dff['vale'].to_numpy()
-
- x_test1=np.split(x_input,[len(x_input)//2,len(x_input)],axis=0)
- x_test=x_test1[1]
- x_control1=np.split(x_test,[len(x_test)//2,len(x_test)],axis=0)
- x_control=x_control1[1]
-
- y_test1=np.split(y_input,[len(y_input)//2,len(y_input)],axis=0)
- y_test=y_test1[1]
- y_control1=np.split(y_test,[len(y_test)//2,len(y_test)],axis=0)
- y_control=y_control1[1]
-
-
- x_training1=np.split(x_input,[0,len(x_input)//2],axis=0)
- x_training=x_training1[1]
- y_training1=np.split(y_input,[0,len(y_input)//2],axis=0)
- y_training=y_training1[1]
+ x=dff['val'].to_numpy()
+ y=dff['vale'].to_numpy()
 # Define model
  
- few_neurons=len(x_training)
+ few_neurons=len(x)
  model = Sequential()
 
  model.add(Dense(few_neurons, input_shape=(1,), input_dim=1, activation='tanh'))
@@ -365,15 +349,13 @@ def NewFourNetwork(): #сеть LSTM
  model.add(Dense(1))
  model.summary()
  model.compile(loss='mean_squared_error', optimizer='adam')
- model.fit(x_training, y_training, epochs=100, batch_size=200)
- plt.scatter(x_training, y_training)
- plt.scatter(x_test, y_test)
- plt.scatter(x_control, y_control)
+ model.fit(x, y, epochs=20, batch_size=200)
+ plt.scatter(x, y)
  #xx=[]
 
- pred=200
- yy=np.arange(min(y_input), pred, 0.1)
- plt.scatter(yy, model.predict(yy), s=1)
+
+ xx=np.arange(min(x), (max(x)+max(x)//2), 0.1)
+ plt.scatter(xx, model.predict(xx), s=1)
  plt.show() 
 
 
