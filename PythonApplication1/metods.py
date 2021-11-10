@@ -357,7 +357,7 @@ def NewFourNetwork(): #сеть LSTM
  xx=np.arange(min(x), (max(x)+max(x)//2), 0.1)
  plt.scatter(xx, model.predict(xx), s=1)
  plt.show() 
-
+ #fdgfdfg
 
 
 def NewTwoNetwork (): #ФУНКЦИЯ,из за которой возможно  ошибка, с выкидыванием
