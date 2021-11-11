@@ -300,7 +300,7 @@ def NewOneNetwork ():  #ФУНКЦИЯ,из за которой ошибка, н
 
 
 def NewFourNetwork(): #сеть LSTM
- url='E:/data2.csv'
+ url='E:/data3.csv'
  #url=PythonApplication1.message.get()
  dff = pd.read_csv(url, names=['val','vale'],decimal='.', delimiter=',', dayfirst=True)
  #x_data = np.linspace (-0.5, 0.5, 200) [:, np.newaxis] # ������������ 200 �����, ���������� �������������� �� -0,5 �� 0,5, �������� ������� �� 200 ����� � ������ �������
@@ -334,30 +334,27 @@ def NewFourNetwork(): #сеть LSTM
  
  few_neurons=len(x)
  model = Sequential()
-
- model.add(Dense(few_neurons, input_shape=(1,), input_dim=1, activation='tanh'))
- model.add(LeakyReLU(alpha=0.2))
- model.add(BatchNormalization(momentum=0.8))
+ model.add(Dense(few_neurons,input_shape=(1,), input_dim=1, activation='relu'))
+ #model.add(Dense(few_neurons, activation='relu'))
  model.add(Dense(few_neurons*2))
- model.add(LeakyReLU(alpha=0.2))
- model.add(BatchNormalization(momentum=0.8))
- model.add(Dense(few_neurons*4))
- model.add(LeakyReLU(alpha=0.2))
- model.add(BatchNormalization(momentum=0.8))
- model.add(Dense(few_neurons, activation='relu'))
 
+ #model.add(Dense(10, activation='relu'))
  model.add(Dense(1))
- model.summary()
  model.compile(loss='mean_squared_error', optimizer='adam')
- model.fit(x, y, epochs=20, batch_size=200)
+ model.fit(x, y, epochs=2700, batch_size=2000)
+
+
+
+
+
  plt.scatter(x, y)
  #xx=[]
 
 
- xx=np.arange(min(x), (max(x)+max(x)//2), 0.1)
+ xx=np.arange(min(x), (max(y)+max(x)//2), 0.1)
  plt.scatter(xx, model.predict(xx), s=1)
  plt.show() 
- #fdgfdfg
+
 
 
 def NewTwoNetwork (): #ФУНКЦИЯ,из за которой возможно  ошибка, с выкидыванием
@@ -569,9 +566,80 @@ def NewThreeNetwork ():
 
 
 
-def evaluation_training():
+def NewFiveNetwork():# т
+
+ url='E:/data3.csv'
+ #url=PythonApplication1.message.get()
+ dff = pd.read_csv(url, names=['val','vale'],decimal='.', delimiter=',', dayfirst=True)
+ 
+ data_dim = 16
+
+ timesteps = 8
+
+ num_classes = 10
+
+ batch_size = 32
+ 
+ x=dff['val'].to_numpy()
+ y=dff['vale'].to_numpy()
+# Define model
+ 
+
+ x_training1=np.split(x, [0, len(x)//2])
+ y_training1=np.split(y, [0, len(x)//2])
+
+ x_training=x_training1[1]
+ y_training=y_training1[1]
+
+ x_test1=np.split(x,[(len(x)//2),len(x-1)])
+ y_test1=np.split(y,[len(x)//2,len(x-1)])
+
+ x_test2=np.split(x_test1[1],[0,len(x_test1)//2])
+ y_test2=np.split(y_test1[1],[0,len(x_test1)//2])
 
 
+
+ x_control2=np.split(x_test1[1],[len(x_test1)//2, len(x_test1)-1])
+ y_control2=np.split(y_test1[1],[len(y_test1)//2, len(y_test1)-1])
+
+
+ x_test=x_test2[1]
+ y_test=y_test2[1]
+
+ x_control=x_control2[1]
+ y_control=y_control2[1]
+
+ few_neurons=len(x)
+ model = Sequential()
+ model.add(Dense(few_neurons,input_shape=(1,), input_dim=1, activation='relu'))
+ model.add(Dense(few_neurons))
+ model.add(Dense(few_neurons))
+
+ #model.add(Dense(10, activation='relu'))
+ model.add(Dense(1))
+ model.compile(loss='mean_squared_error', optimizer='adam')
+ model.fit(x, y, epochs=270, batch_size=200)
+
+
+
+
+ model2 = Sequential()
+ model2.add(Dense(few_neurons,input_shape=(1,), input_dim=1, activation='sigmoid'))
+ model2.add(Dense(few_neurons, activation='sigmoid'))
+ model2.add(Dense(few_neurons*2))
+
+ model2.add(Dense(100))
+ model2.add(Dense(1))
+ model2.compile(loss='mean_squared_error', optimizer='adam')
+ model2.fit(x, model.predict(x), epochs=270, batch_size=200)
+
+ plt.scatter(x, y)
+ #xx=[]
+
+
+ xx=np.arange(min(x), (max(x)+max(x)//2), 0.1)
+ plt.scatter(xx, model2.predict(xx), s=1)
+ plt.show() 
 
 
 
@@ -603,3 +671,5 @@ def choiceCombobox():#выбор функции
              NewThreeNetwork()
      if PythonApplication1.comboExample.get() == "NewFourNetwork":
              NewFourNetwork()
+     if PythonApplication1.comboExample.get() == "NewFiveNetwork":
+             NewFiveNetwork()

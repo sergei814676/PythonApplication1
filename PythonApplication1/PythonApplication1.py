@@ -62,7 +62,8 @@ comboExample = ttk.Combobox(root,
                                     "Lineq",
                                     "NewTwoNetwork",
                                     "NewThreeNetwork",
-                                    "NewFourNetwork"],
+                                    "NewFourNetwork",
+                                    "NewFiveNetwork"],
                             state="readonly")
 comboExample.place(relx=.5, rely=.8, anchor="c")
 
