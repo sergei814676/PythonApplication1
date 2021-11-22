@@ -8,6 +8,7 @@ import tensorflow
 import tensorflow as tf
 import tensorflow.compat.v1 as tf
 from tkinter import *
+from tkinter import messagebox
 import tkinter as tk
 import matplotlib
 from PythonApplication1 import matplotlib, plt, plt
@@ -19,7 +20,8 @@ import tkinter.filedialog as fd
 from tkinter import ttk
 import metods
 from sklearn.preprocessing import MinMaxScaler
-
+from tkinter import messagebox as mb
+from sklearn.metrics import mean_squared_error
 from keras.models import Sequential
 from keras.layers import Dense, SimpleRNN, Dropout, Flatten
 import time, os, argparse, io
@@ -39,11 +41,12 @@ def postroenie ():#��������
  df = pd.read_csv(url, names=['val','vale'],decimal='.', delimiter=',', dayfirst=True)
 
 
- xxx=df['val'].to_numpy()
- yyy=df['vale'].to_numpy()
 
- xx = np.array([df['val'].to_numpy()], dtype=float)
- yy = np.array([df['vale'].to_numpy()], dtype=float)
+ #xxx=df['val'].to_numpy()
+ #yyy=df['vale'].to_numpy()
+
+ #xx = np.array([df['val'].to_numpy()], dtype=float)
+ #yy = np.array([df['vale'].to_numpy()], dtype=float)
  # Define the number of nodes
  n_nodes_hl1 = 100
  n_nodes_hl2 = 100
@@ -51,15 +54,17 @@ def postroenie ():#��������
 
  # Define the number of outputs and the learn rate
  n_classes = 1
- learn_rate = 0.1
+ 
 
- xx.dtype
+ #xx.dtype
  learning_rate = 0.01
  training_epochs = 100
 
- x_train=df['val'].to_numpy()
- y_train=df['vale'].to_numpy()
+ #x_train=np.array(df['val'].to_numpy(), dtype=float)
+ #y_train=np.array(df['vale'].to_numpy(), dtype=float)
 
+ x_train = np.linspace(-1, 1, 101)
+ y_train = 2 * x_train + np.random.randn(*x_train.shape) * 0.33
 
  X = tf.placeholder(tf.float32)
  Y = tf.placeholder(tf.float32)
@@ -89,7 +94,7 @@ def postroenie ():#��������
  plt.scatter(x_train, y_train)
  y_learned = x_train*w_val
  plt.plot(x_train, y_learned, 'r')
- plt.show() 
+ plt.show()
 
 
 
@@ -235,8 +240,8 @@ def probanerset ():
 
 
 def NewOneNetwork ():  #ФУНКЦИЯ,из за которой ошибка, но с 4 перезапуска вроде не вылетает
- url='E:/data2.csv'
- #url=PythonApplication1.message.get()
+ #url='E:/data2.csv'
+ url=PythonApplication1.message.get()
  dff = pd.read_csv(url, names=['val','vale'],decimal='.', delimiter=',', dayfirst=True)
  #x_data = np.linspace (-0.5, 0.5, 200) [:, np.newaxis] # ������������ 200 �����, ���������� �������������� �� -0,5 �� 0,5, �������� ������� �� 200 ����� � ������ �������
  #noise = np.random.normal (0, 0.02, x_data.shape) # ��������� ���������� ����
@@ -263,14 +268,14 @@ def NewOneNetwork ():  #ФУНКЦИЯ,из за которой ошибка, н
  
  few_neurons=len(x)
  model = Sequential()
- model.add(Dense(few_neurons,input_shape=(1,), input_dim=1, activation='tanh'))
- model.add(Dense(few_neurons, activation='tanh'))
- model.add(Dense(few_neurons, activation='relu'))
+ model.add(Dense(512,input_shape=(1,), input_dim=1, activation='tanh'))
+ model.add(Dense(1024, activation='relu'))
+ model.add(Dense(1024, activation='relu'))
 
- #model.add(Dense(10, activation='relu'))
+ model.add(Dense(512, activation='tanh'))
  model.add(Dense(1))
  model.compile(loss='mean_squared_error', optimizer='adam')
- model.fit(x, y, epochs=2700, batch_size=2000)
+ model.fit(x, y, epochs=270, batch_size=200)
 
 # predictions = model.predict([10, 5, 200, 13])
  #print(predictions) # Approximately 100, 25, 40000, 169
@@ -566,7 +571,7 @@ def NewThreeNetwork ():
 
 
 
-def NewFiveNetwork():# т
+def NewFiveNetwork():# тандем НС
 
  url='E:/data3.csv'
  #url=PythonApplication1.message.get()
@@ -585,63 +590,179 @@ def NewFiveNetwork():# т
 # Define model
  
 
- x_training1=np.split(x, [0, len(x)//2])
- y_training1=np.split(y, [0, len(x)//2])
+ x_training1=np.split(x, [0, (len(x)//4)*3])
+ y_training1=np.split(y, [0, (len(x)//4)*3])
 
  x_training=x_training1[1]
  y_training=y_training1[1]
 
- x_test1=np.split(x,[(len(x)//2),len(x-1)])
- y_test1=np.split(y,[len(x)//2,len(x-1)])
-
- x_test2=np.split(x_test1[1],[0,len(x_test1)//2])
- y_test2=np.split(y_test1[1],[0,len(x_test1)//2])
-
-
-
- x_control2=np.split(x_test1[1],[len(x_test1)//2, len(x_test1)-1])
- y_control2=np.split(y_test1[1],[len(y_test1)//2, len(y_test1)-1])
-
-
- x_test=x_test2[1]
- y_test=y_test2[1]
-
- x_control=x_control2[1]
- y_control=y_control2[1]
+ x_test=x_training1[2]
+ y_test=y_training1[2]
 
  few_neurons=len(x)
  model = Sequential()
  model.add(Dense(few_neurons,input_shape=(1,), input_dim=1, activation='relu'))
- model.add(Dense(few_neurons))
- model.add(Dense(few_neurons))
-
+ #model.add(Dense(5, activation='relu'))
+ model.add(Dense(200, activation='relu'))
+ model.add(Dense(200, activation='relu'))
+ model.add(Dense(100, activation='relu'))
  #model.add(Dense(10, activation='relu'))
+
+ model.add(Dense(1))
+ 
+ 
+ model.add(Dense(200, activation='sigmoid'))
+ model.add(Dense(200, activation='sigmoid'))
+ model.add(Dense(100, activation='sigmoid'))
+ #model.add(Dense(5, activation='sigmoid'))
+ #model.add(Dense(10, activation='relu'))
+
  model.add(Dense(1))
  model.compile(loss='mean_squared_error', optimizer='adam')
- model.fit(x, y, epochs=270, batch_size=200)
+
+ model.fit(x_training, y_training, epochs=1500, batch_size=200)
 
 
 
 
- model2 = Sequential()
- model2.add(Dense(few_neurons,input_shape=(1,), input_dim=1, activation='sigmoid'))
- model2.add(Dense(few_neurons, activation='sigmoid'))
- model2.add(Dense(few_neurons*2))
+# model2 = Sequential()
+# model2.add(Dense(few_neurons,input_shape=(1,), input_dim=1, activation='sigmoid'))
+# model2.add(Dense(few_neurons, activation='sigmoid'))
+# model2.add(Dense(few_neurons*2))
 
- model2.add(Dense(100))
- model2.add(Dense(1))
- model2.compile(loss='mean_squared_error', optimizer='adam')
- model2.fit(x, model.predict(x), epochs=270, batch_size=200)
+# model2.add(Dense(few_neurons))
+# model2.add(Dense(1))
+# model2.compile(loss='mean_squared_error', optimizer='adam')
+# model2.fit(x_training, model.predict(x_training), epochs=2700, batch_size=2000)
 
- plt.scatter(x, y)
+ plt.scatter(x_training, y_training)
  #xx=[]
-
+ plt.scatter(x_test, y_test)
+ 
 
  xx=np.arange(min(x), (max(x)+max(x)//2), 0.1)
- plt.scatter(xx, model2.predict(xx), s=1)
+ plt.scatter(xx, model.predict(xx), s=1)
  plt.show() 
 
+def conclusion_MSE(a):
+        msg = a
+        mb.showinfo("MSE", msg)
 
+def PodborZnacheny():# тандем НС
+
+ #url='E:/data3.csv'
+ url=PythonApplication1.message.get()
+ dff = pd.read_csv(url, names=['val','vale'],decimal='.', delimiter=',', dayfirst=True)
+
+ fun_active_all=['relu','tanh','elu','softmax','selu','softplus','softsign','sigmoid','hard_sigmoid','linear'] 
+ fun_optimizers_all=['RMSprop', 'sgd', 'adam', 'Nadam','Adamax','Adadelta', 'Adagrad']
+ x_files=dff['val'].to_numpy()
+ y_files=dff['vale'].to_numpy()
+# Define model
+ 
+ x=np.ones(len(x_files))
+ y=np.ones(len(y_files))#Создание массивов
+
+ x_y_shuffle=np.ones((2,len(x_files))) #Перетосовка точек 
+ x_y_shuffle[0]=x_files.copy()
+ x_y_shuffle[1]=y_files.copy()
+ x_y_shuffle=x_y_shuffle.T
+ np.random.shuffle(x_y_shuffle)
+ x_y_shuffle=x_y_shuffle.T
+ x=x_y_shuffle[0]
+ y=x_y_shuffle[1]
+
+ temp = list(zip(x_y_shuffle[0], x_y_shuffle[1]))
+
+
+ separation_array=(len(x)//4)*3
+
+
+ x_training1=np.split(x, [0, separation_array])
+ y_training1=np.split(y, [0, separation_array])
+
+ x_training=x_training1[1]
+ y_training=y_training1[1]
+
+ x_test=x_training1[2]
+ y_test=y_training1[2]
+ i=0
+ min_index=1000
+ min_element=1000
+ search_min_mse=np.ones([101])
+ while i<=100:
+  search_min_mse[i]=1000
+  i+=1
+
+  
+     
+     
+ i=0
+ while i<=len(fun_active_all)-1:
+
+
+
+
+  few_neurons=len(x)
+  model = Sequential()
+ # tens_i=i
+
+  model.add(Dense(512,input_shape=(1,), input_dim=1, activation=fun_active_all[i]))
+  model.add(Dense(1024, activation=fun_active_all[i]))
+  model.add(Dense(1024, activation=fun_active_all[i]))
+  model.add(Dense(512, activation=fun_active_all[i]))
+  model.add(Dense(1))
+
+ #model.add(Dense(1))
+ 
+ 
+ #model.add(Dense(200, activation='sigmoid'))
+ #model.add(Dense(200, activation='sigmoid'))
+ #model.add(Dense(100, activation='sigmoid'))
+ #model.add(Dense(5, activation='sigmoid'))
+ #model.add(Dense(10, activation='relu'))
+
+  
+  model.compile(loss='mean_squared_error', optimizer= 'Adagrad')
+
+  model.fit(x_training, y_training, epochs=200+i, batch_size=512)
+
+   #search_min_mse[i]=mean_squared_error(y_test, model.predict(x_test))
+  if (mean_squared_error(y_test, model.predict(x_test))<min_element):
+     min_element=mean_squared_error(y_test, model.predict(x_test))
+     min_index=i
+    
+
+  i +=1
+  
+
+
+
+ mse_a=min_index
+
+ model = Sequential()
+
+ model.add(Dense(512,input_shape=(1,), input_dim=1, activation=fun_active_all[mse_a]))
+ model.add(Dense(1024, activation=fun_active_all[mse_a]))
+ model.add(Dense(1024, activation=fun_active_all[mse_a]))
+ model.add(Dense(512, activation=fun_active_all[mse_a]))
+
+
+ model.add(Dense(1))
+ model.compile(loss='mean_squared_error', optimizer= 'Adagrad')
+
+ model.fit(x_training, y_training, epochs=200, batch_size=200)
+
+ plt.scatter(x_training, y_training)
+ #xx=[]
+ plt.scatter(x_test, y_test)
+ 
+ conclusion_MSE(fun_active_all[min_index])
+
+ xx=np.arange(min(x), (max(x)+max(x)//2), 0.1)
+
+ plt.scatter(xx, model.predict(xx), s=1)
+ plt.show() 
 
 
 
@@ -673,3 +794,5 @@ def choiceCombobox():#выбор функции
              NewFourNetwork()
      if PythonApplication1.comboExample.get() == "NewFiveNetwork":
              NewFiveNetwork()
+     if PythonApplication1.comboExample.get() == "PodborZnacheny":
+             PodborZnacheny()
