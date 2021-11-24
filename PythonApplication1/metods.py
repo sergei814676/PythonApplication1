@@ -6,7 +6,7 @@ import pandas as pd
 import numpy as np
 import tensorflow
 import tensorflow as tf
-import tensorflow.compat.v1 as tf
+import tensorflow.compat as tf
 from tkinter import *
 from tkinter import messagebox
 import tkinter as tk
@@ -31,8 +31,10 @@ from keras.layers import Embedding
 from keras.layers import LSTM
 from keras.layers import LeakyReLU
 from keras.layers import BatchNormalization
+from tensorflow import keras
+from tensorflow.keras import layers
 dir = os.path.dirname(os.path.realpath(__file__))
-tf.compat.v1.disable_eager_execution()
+#tf.compat.v1.disable_eager_execution()
 
 def postroenie ():#��������
  #url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ_Mv5MB1Ty1ixEnsXeDJwz0_31rQ1woLrfvmT-SSRuqcUybp6cTy8CgqncjtYxC41ZG5HlzPqUN0au/pub?gid=0&single=true&output=csv'
@@ -268,14 +270,15 @@ def NewOneNetwork ():  #ФУНКЦИЯ,из за которой ошибка, н
  
  few_neurons=len(x)
  model = Sequential()
- model.add(Dense(512,input_shape=(1,), input_dim=1, activation='tanh'))
- model.add(Dense(1024, activation='relu'))
- model.add(Dense(1024, activation='relu'))
+ initializer = keras.initializers.HeNormal(seed=None)
+ model.add(Dense(512, input_dim=1, activation='tanh'))
+ model.add(Dense(1024, activation='tanh'))
+ model.add(Dense(512, activation='tanh')) 
+ model.add(Dense(1, activation='elu'))
 
- model.add(Dense(512, activation='tanh'))
- model.add(Dense(1))
+ sgd = keras.optimizers.SGD(lr=0.01, momentum=0.9, nesterov=True)
  model.compile(loss='mean_squared_error', optimizer='adam')
- model.fit(x, y, epochs=270, batch_size=200)
+ model.fit(x, y, epochs=10900, batch_size=2000)
 
 # predictions = model.predict([10, 5, 200, 13])
  #print(predictions) # Approximately 100, 25, 40000, 169
@@ -300,7 +303,7 @@ def NewOneNetwork ():  #ФУНКЦИЯ,из за которой ошибка, н
 
 
  xx=np.arange(min(x), max(x), 0.1)
- plt.scatter(xx, model.predict(xx))
+ plt.scatter(xx, model.predict(xx), s=1)
  plt.show()
 
 
@@ -362,142 +365,66 @@ def NewFourNetwork(): #сеть LSTM
 
 
 
-def NewTwoNetwork (): #ФУНКЦИЯ,из за которой возможно  ошибка, с выкидыванием
-   #  x = np.arange(0, 2*np.pi, 2*np.pi/1000).reshape((1000,1))
-    # y = np.sin(x)
-    # plt.plot(x,y)
-    # plt.show()
- url=PythonApplication1.message.get()
- #df = pd.read_csv(url, names=['val','vale'],decimal='.', delimiter=',', dayfirst=True)
- #x = np.array([df['val'].to_numpy()], dtype=float)
- #y = np.array([df['vale'].to_numpy()], dtype=float)
- data = pd.read_csv(url)
+def make_model(input_shape):
+    input_layer = keras.layers.Input(input_shape)
 
-# Drop date variable
- #data = data.drop(['DATE'], 1)
+    conv1 = keras.layers.Conv1D(filters=64, kernel_size=3, padding="same")(input_layer)
+    conv1 = keras.layers.BatchNormalization()(conv1)
+    conv1 = keras.layers.ReLU()(conv1)
+
+    conv2 = keras.layers.Conv1D(filters=64, kernel_size=3, padding="same")(conv1)
+    conv2 = keras.layers.BatchNormalization()(conv2)
+    conv2 = keras.layers.ReLU()(conv2)
+
+    conv3 = keras.layers.Conv1D(filters=64, kernel_size=3, padding="same")(conv2)
+    conv3 = keras.layers.BatchNormalization()(conv3)
+    conv3 = keras.layers.ReLU()(conv3)
+
+    gap = keras.layers.GlobalAveragePooling1D()(conv3)
+
+    output_layer = keras.layers.Dense(num_classes, activation="softmax")(gap)
+
+    return keras.models.Model(inputs=input_layer, outputs=output_layer)
+
+
+
+
+def NewTwoNetwork (): #ФУНКЦИЯ,из за которой возможно  ошибка, с выкидыванием
+
+ #url='E:/data3.csv'
+ url=PythonApplication1.message.get()
+ dff = pd.read_csv(url, names=['val','vale'],decimal='.', delimiter=',', dayfirst=True)
+
+ x=dff['val'].to_numpy()
+ y=dff['vale'].to_numpy()
 
 # Dimensions of dataset
- n = data.shape[0]
- p = data.shape[1]
+ model = tf.keras.Sequential(
+  [
+  tf.keras.layers.Dense(100, activation="relu"),
+  tf.keras.layers.Dense(100, activation="relu"),
+  tf.keras.layers.Dense(1, activation="linear"),
+  gpflux.layers.GPLayer(
+  kernel, inducing_variable, num_data=num_data,
+  num_latent_gps=output_dim
+  ),
+  gpflux.layers.GPLayer(
+  kernel, inducing_variable, num_data=num_data,
+  num_latent_gps=output_dim
+  ),
+  likelihood_container,
+  ]
+ )
+ model.fit(x_training, y_training, epochs=200, batch_size=512)
+ plt.scatter(x, y)
+ 
+ xx=np.arange(min(x), (max(x)+max(x)//2), 0.1)
 
-# Make data a np.array
- data = data.values
+ plt.scatter(xx, model.predict(xx), s=1)
+ plt.show() 
 
-# Training and test data
- train_start = 0
- train_end = int(np.floor(0.8*n))
- test_start = train_end + 1
- test_end = n
- data_train = data[np.arange(train_start, train_end), :]
- data_test = data[np.arange(test_start, test_end), :]
 
-# Scale data
- scaler = MinMaxScaler(feature_range=(-1, 1))
- scaler.fit(data_train)
- data_train = scaler.transform(data_train)
- data_test = scaler.transform(data_test)
 
-# Build X and y
- X_train = data_train[:, 1:]
- y_train = data_train[:, 0]
- X_test = data_test[:, 1:]
- y_test = data_test[:, 0]
-
-# Number of stocks in training data
- n_stocks = X_train.shape[1]
-
-# Neurons
- n_neurons_1 = 1024
- n_neurons_2 = 512
- n_neurons_3 = 256
- n_neurons_4 = 128
-
-# Session
- net = tf.InteractiveSession()
-
-# Placeholder
- X = tf.placeholder(dtype=tf.float32, shape=[None, n_stocks])
- Y = tf.placeholder(dtype=tf.float32, shape=[None])
-
-# Initializers
- sigma = 1
- weight_initializer = tf.variance_scaling_initializer(mode="fan_avg", distribution="uniform", scale=sigma)
- bias_initializer = tf.zeros_initializer()
-
-# Hidden weights
- W_hidden_1 = tf.Variable(weight_initializer([n_stocks, n_neurons_1]))
- bias_hidden_1 = tf.Variable(bias_initializer([n_neurons_1]))
- W_hidden_2 = tf.Variable(weight_initializer([n_neurons_1, n_neurons_2]))
- bias_hidden_2 = tf.Variable(bias_initializer([n_neurons_2]))
- W_hidden_3 = tf.Variable(weight_initializer([n_neurons_2, n_neurons_3]))
- bias_hidden_3 = tf.Variable(bias_initializer([n_neurons_3]))
- W_hidden_4 = tf.Variable(weight_initializer([n_neurons_3, n_neurons_4]))
- bias_hidden_4 = tf.Variable(bias_initializer([n_neurons_4]))
-
-# Output weights
- W_out = tf.Variable(weight_initializer([n_neurons_4, 1]))
- bias_out = tf.Variable(bias_initializer([1]))
-
-# Hidden layer
- hidden_1 = tf.nn.relu(tf.add(tf.matmul(X, W_hidden_1), bias_hidden_1))
- hidden_2 = tf.nn.relu(tf.add(tf.matmul(hidden_1, W_hidden_2), bias_hidden_2))
- hidden_3 = tf.nn.relu(tf.add(tf.matmul(hidden_2, W_hidden_3), bias_hidden_3))
- hidden_4 = tf.nn.relu(tf.add(tf.matmul(hidden_3, W_hidden_4), bias_hidden_4))
-
-# Output layer (transpose!)
- out = tf.transpose(tf.add(tf.matmul(hidden_4, W_out), bias_out))
-
-# Cost function
- mse = tf.reduce_mean(tf.squared_difference(out, Y))
-
-# Optimizer
- opt = tf.train.AdamOptimizer().minimize(mse)
-
-# Init
- net.run(tf.global_variables_initializer())
-
-# Setup plot
- plt.ion()
- fig = plt.figure()
- ax1 = fig.add_subplot(111)
- line1, = ax1.plot(y_test)
- line2, = ax1.plot(y_test * 0.5)
- plt.show()
-
-# Fit neural net
- batch_size = 256
- mse_train = []
- mse_test = []
-
-# Run
- epochs = 10
- for e in range(epochs):
-
-    # Shuffle training data
-    shuffle_indices = np.random.permutation(np.arange(len(y_train)))
-    X_train = X_train[shuffle_indices]
-    y_train = y_train[shuffle_indices]
-
-    # Minibatch training
-    for i in range(0, len(y_train) // batch_size):
-        start = i * batch_size
-        batch_x = X_train[start:start + batch_size]
-        batch_y = y_train[start:start + batch_size]
-        # Run optimizer with batch
-        net.run(opt, feed_dict={X: batch_x, Y: batch_y})
-
-        # Show progress
-        if np.mod(i, 50) == 0:
-            # MSE train and test
-            mse_train.append(net.run(mse, feed_dict={X: X_train, Y: y_train}))
-            mse_test.append(net.run(mse, feed_dict={X: X_test, Y: y_test}))
-            print('MSE Train: ', mse_train[-1])
-            print('MSE Test: ', mse_test[-1])
-            # Prediction
-            pred = net.run(out, feed_dict={X: X_test})
-            line2.set_ydata(pred)
-            plt.title('Epoch ' + str(e) + ', Batch ' + str(i))
-            plt.pause(0.01)
 
 def NewThreeNetwork ():
  url=PythonApplication1.message.get()
@@ -709,7 +636,7 @@ def PodborZnacheny():# тандем НС
 
   model.add(Dense(512,input_shape=(1,), input_dim=1, activation=fun_active_all[i]))
   model.add(Dense(1024, activation=fun_active_all[i]))
-  model.add(Dense(1024, activation=fun_active_all[i]))
+ # model.add(Dense(1024, activation=fun_active_all[i]))
   model.add(Dense(512, activation=fun_active_all[i]))
   model.add(Dense(1))
 
@@ -723,7 +650,7 @@ def PodborZnacheny():# тандем НС
  #model.add(Dense(10, activation='relu'))
 
   
-  model.compile(loss='mean_squared_error', optimizer= 'Adagrad')
+  model.compile(loss='mean_squared_error', optimizer= 'RMSprop')
 
   model.fit(x_training, y_training, epochs=200+i, batch_size=512)
 
@@ -732,11 +659,8 @@ def PodborZnacheny():# тандем НС
      min_element=mean_squared_error(y_test, model.predict(x_test))
      min_index=i
     
-
   i +=1
   
-
-
 
  mse_a=min_index
 
@@ -744,12 +668,12 @@ def PodborZnacheny():# тандем НС
 
  model.add(Dense(512,input_shape=(1,), input_dim=1, activation=fun_active_all[mse_a]))
  model.add(Dense(1024, activation=fun_active_all[mse_a]))
- model.add(Dense(1024, activation=fun_active_all[mse_a]))
+# model.add(Dense(1024, activation=fun_active_all[mse_a]))
  model.add(Dense(512, activation=fun_active_all[mse_a]))
 
 
  model.add(Dense(1))
- model.compile(loss='mean_squared_error', optimizer= 'Adagrad')
+ model.compile(loss='mean_squared_error', optimizer= 'RMSprop')
 
  model.fit(x_training, y_training, epochs=200, batch_size=200)
 
