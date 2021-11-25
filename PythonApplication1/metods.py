@@ -33,6 +33,8 @@ from keras.layers import LeakyReLU
 from keras.layers import BatchNormalization
 from tensorflow import keras
 from tensorflow.keras import layers
+import h5py
+from keras.layers import TimeDistributed
 dir = os.path.dirname(os.path.realpath(__file__))
 #tf.compat.v1.disable_eager_execution()
 
@@ -241,27 +243,10 @@ def probanerset ():
     predictor.test(test_x)
 
 
-def NewOneNetwork ():  #ФУНКЦИЯ,из за которой ошибка, но с 4 перезапуска вроде не вылетает
+def NewOneNetwork (): 
  #url='E:/data2.csv'
  url=PythonApplication1.message.get()
  dff = pd.read_csv(url, names=['val','vale'],decimal='.', delimiter=',', dayfirst=True)
- #x_data = np.linspace (-0.5, 0.5, 200) [:, np.newaxis] # ������������ 200 �����, ���������� �������������� �� -0,5 �� 0,5, �������� ������� �� 200 ����� � ������ �������
- #noise = np.random.normal (0, 0.02, x_data.shape) # ��������� ���������� ����
- #y_data = np.square(x_data) + noise  # y = x^2 + noise
-
- #x_data=df['val'].to_numpy()
- #y_data=df['vale'].to_numpy()
-
- #x_data = np.array([df['val'].to_numpy()], dtype=float)
- #y_data = np.array([df['vale'].to_numpy()], dtype=float)
-    
-    
- #x = tf.placeholder (tf.float32, [None, 1]) # ���������� �����������
- #y = tf.placeholder(tf.float32, [None, 1])
-
-
- #x = -50 + np.random.random((25000,1))*100
-# y = x**2
 
  
  x=dff['val'].to_numpy()
@@ -278,7 +263,7 @@ def NewOneNetwork ():  #ФУНКЦИЯ,из за которой ошибка, н
 
  sgd = keras.optimizers.SGD(lr=0.01, momentum=0.9, nesterov=True)
  model.compile(loss='mean_squared_error', optimizer='adam')
- model.fit(x, y, epochs=10900, batch_size=2000)
+ model.fit(x, y, epochs=3000, batch_size=2000)
 
 # predictions = model.predict([10, 5, 200, 13])
  #print(predictions) # Approximately 100, 25, 40000, 169
@@ -424,6 +409,20 @@ def NewTwoNetwork (): #ФУНКЦИЯ,из за которой возможно 
  plt.show() 
 
 
+def stable_network():
+ model = Sequential()
+ initializer = keras.initializers.HeNormal(seed=None)
+ model.add(Dense(1, input_dim=1, activation='tanh'))
+ model.add(Dense(1024, activation='tanh'))
+ model.add(Dense(512, activation='tanh')) 
+ model.add(Dense(1, activation='elu'))
+
+ sgd = keras.optimizers.SGD(lr=0.01, momentum=0.9, nesterov=True)
+ model.compile(loss='mean_squared_error', optimizer='adam')
+ return model
+
+
+
 
 
 def NewThreeNetwork ():
@@ -432,146 +431,46 @@ def NewThreeNetwork ():
 
 
  x=dff['val'].to_numpy()
- t=dff['vale'].to_numpy()
- #learning_rate = 0.01
- #training_epochs = 40
-
- tf.disable_v2_behavior()
- def convertToMatrix(data, step):
-  X, Y =[], []
-  for i in range(len(data)-step):
-   d=i+step
-   X.append(data[i:d,])
-   Y.append(data[d,])
-  return np.array(X), np.array(Y)
-
- step = 2
- N = len(x)
- Tp =(len(x)//4)*3
- #step = 4
- #N = 1000    
- #Tp = 800
- #t=np.arange(0,N)
- #x=np.sin(0.02*t)+2*np.random.rand(N)
-
- df = pd.DataFrame(x)
- df.head()
-
- plt.plot(t, x,'*')
-#plt.show()
-
- values=df.values
- train,test = values[0:Tp,:], values[Tp:N,:]
-
-# add step elements into train and test
- test = np.append(test,np.repeat(test[-1,],step))
- train = np.append(train,np.repeat(train[-1,],step))
- 
- trainX,trainY =convertToMatrix(train,step)
- testX,testY =convertToMatrix(test,step)
- trainX = np.reshape(trainX, (trainX.shape[0], 1, trainX.shape[1]))
- testX = np.reshape(testX, (testX.shape[0], 1, testX.shape[1]))
-
- model = Sequential()
- model.add(SimpleRNN(units=32, input_shape=(1,step), activation="relu"))
- model.add(Dense(8, activation="relu")) 
- model.add(Dense(1))
- model.compile(loss='mean_squared_error', optimizer='rmsprop')
- model.summary()
-
- model.fit(trainX,trainY, epochs=100, batch_size=16, verbose=2)
- trainPredict = model.predict(trainX)
- testPredict= model.predict(testX)
- predicted=np.concatenate((trainPredict,testPredict),axis=0)
-
- trainScore = model.evaluate(trainX, trainY, verbose=0)
- print(trainScore)
-
- index = df.index.values
-# plt.plot(df)
- plt.plot(index,predicted)
- plt.axvline(df.index[Tp], c="r")
- plt.show()
-
-
-
-
-
-
-def NewFiveNetwork():# тандем НС
-
- url='E:/data3.csv'
- #url=PythonApplication1.message.get()
- dff = pd.read_csv(url, names=['val','vale'],decimal='.', delimiter=',', dayfirst=True)
- 
- data_dim = 16
-
- timesteps = 8
-
- num_classes = 10
-
- batch_size = 32
- 
- x=dff['val'].to_numpy()
  y=dff['vale'].to_numpy()
-# Define model
  
 
- x_training1=np.split(x, [0, (len(x)//4)*3])
- y_training1=np.split(y, [0, (len(x)//4)*3])
 
- x_training=x_training1[1]
- y_training=y_training1[1]
+ model_one=stable_network()
+ model_one.fit(x, y, epochs=100, batch_size=2000)
+ model_one.save_weights('E:\my_model.h5')
+ print(model_one.get_weights()[3])
+ model_two = Sequential()
+ #model_two.load_weights('E:\my_model.h5')
+ initializer = keras.initializers.HeNormal(seed=None)
+ model_two.add(Dense(1,activation='elu',kernel_initializer=set_weights(model_one.get_weights()[3])))
 
- x_test=x_training1[2]
- y_test=y_training1[2]
+ model_two.add(Dense(1024, activation='tanh'))
+ model_two.add(Dense(512, activation='tanh')) 
+ model_two.add(Dense(1, activation='elu'))
 
- few_neurons=len(x)
- model = Sequential()
- model.add(Dense(few_neurons,input_shape=(1,), input_dim=1, activation='relu'))
- #model.add(Dense(5, activation='relu'))
- model.add(Dense(200, activation='relu'))
- model.add(Dense(200, activation='relu'))
- model.add(Dense(100, activation='relu'))
- #model.add(Dense(10, activation='relu'))
+ sgd = keras.optimizers.SGD(lr=0.01, momentum=0.9, nesterov=True)
 
- model.add(Dense(1))
+ model_two.compile(loss='mean_squared_error', optimizer='adam')
+ #model_two.load_weights('E:\my_model.h5', by_name=True)
+ model_two.fit(x, y, epochs=500, batch_size=2000)
  
- 
- model.add(Dense(200, activation='sigmoid'))
- model.add(Dense(200, activation='sigmoid'))
- model.add(Dense(100, activation='sigmoid'))
- #model.add(Dense(5, activation='sigmoid'))
- #model.add(Dense(10, activation='relu'))
-
- model.add(Dense(1))
- model.compile(loss='mean_squared_error', optimizer='adam')
-
- model.fit(x_training, y_training, epochs=1500, batch_size=200)
 
 
-
-
-# model2 = Sequential()
-# model2.add(Dense(few_neurons,input_shape=(1,), input_dim=1, activation='sigmoid'))
-# model2.add(Dense(few_neurons, activation='sigmoid'))
-# model2.add(Dense(few_neurons*2))
-
-# model2.add(Dense(few_neurons))
-# model2.add(Dense(1))
-# model2.compile(loss='mean_squared_error', optimizer='adam')
-# model2.fit(x_training, model.predict(x_training), epochs=2700, batch_size=2000)
-
- plt.scatter(x_training, y_training)
+ plt.scatter(x, y)
  #xx=[]
- plt.scatter(x_test, y_test)
  
-
- xx=np.arange(min(x), (max(x)+max(x)//2), 0.1)
+ xx=np.arange(min(x)-10, (max(x)+max(x)//2), 0.1)
  plt.scatter(xx, model.predict(xx), s=1)
  plt.show() 
 
-def conclusion_MSE(a):
+
+
+
+
+
+
+
+def conclusion_MSE(a): #выводит сообщение
         msg = a
         mb.showinfo("MSE", msg)
 
