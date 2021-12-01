@@ -26,7 +26,7 @@ import metods
 
 
 def choose_file():
-        filetypes =[('Файл необходимый', '*.csv'), ('Все файлы', '*')]
+        filetypes =[('Файл необходимый', '*.xlsx *.csv'), ('Все файлы', '*')]
         dlg = fd.Open(filetypes = filetypes)
         fl = dlg.show()
         if fl != '':

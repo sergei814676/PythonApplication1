@@ -6,7 +6,7 @@ import pandas as pd
 import numpy as np
 import tensorflow
 import tensorflow as tf
-import tensorflow.compat as tf
+
 from tkinter import *
 from tkinter import messagebox
 import tkinter as tk
@@ -34,9 +34,46 @@ from keras.layers import BatchNormalization
 from tensorflow import keras
 from tensorflow.keras import layers
 import h5py
+import openpyxl
+from tensorflow.keras import Model, Input, backend
 from keras.layers import TimeDistributed
 dir = os.path.dirname(os.path.realpath(__file__))
 #tf.compat.v1.disable_eager_execution()
+
+
+
+def file_acceptance (): #считывание данных из файла
+
+ x=[]
+ y=[]
+
+ url=PythonApplication1.message.get()
+ if (url.find(".xlsx",len(url)-5) !=-1):
+    wb_obj = openpyxl.load_workbook(filename = url)
+
+    sheet_obj = wb_obj.active #Выбираем активный лист таблицы(
+    m_row = sheet_obj.max_row
+
+    for i in range(1, m_row + 1):
+        cell_obj1 = sheet_obj.cell(row=i, column=1) # В column= подставляем номер нужной колонки
+        cell_obj2 = sheet_obj.cell(row=i, column=2)
+    
+        x.append(cell_obj1.value)
+        y.append(cell_obj2.value)
+ if (url.find(".csv",len(url)-5) !=-1):
+     dff = pd.read_csv(url, names=['val','vale'],decimal='.', delimiter=',', dayfirst=True)
+     x=dff['val'].to_numpy()
+     y=dff['vale'].to_numpy()
+
+ Data=np.zeros(shape=(2,len(x)))
+ Data[0]=x[:]
+ Data[1]=y[:]
+ return Data
+
+ #dff = pd.read_table(url, names=['val','vale'],decimal='.', delimiter=',')
+
+
+
 
 def postroenie ():#��������
  #url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ_Mv5MB1Ty1ixEnsXeDJwz0_31rQ1woLrfvmT-SSRuqcUybp6cTy8CgqncjtYxC41ZG5HlzPqUN0au/pub?gid=0&single=true&output=csv'
@@ -244,13 +281,14 @@ def probanerset ():
 
 
 def NewOneNetwork (): 
- #url='E:/data2.csv'
- url=PythonApplication1.message.get()
- dff = pd.read_csv(url, names=['val','vale'],decimal='.', delimiter=',', dayfirst=True)
 
- 
- x=dff['val'].to_numpy()
- y=dff['vale'].to_numpy()
+ x=file_acceptance()[0]
+ y=file_acceptance ()[1]
+
+ #x=sheet['A'].value
+# y=sheet['B'].value
+ #x=dff['val'].to_numpy()
+ #y=dff['vale'].to_numpy()
 # Define model
  
  few_neurons=len(x)
@@ -259,7 +297,7 @@ def NewOneNetwork ():
  model.add(Dense(512, input_dim=1, activation='tanh'))
  model.add(Dense(1024, activation='tanh'))
  model.add(Dense(512, activation='tanh')) 
- model.add(Dense(1, activation='elu'))
+ model.add(Dense(1, activation='linear'))
 
  sgd = keras.optimizers.SGD(lr=0.01, momentum=0.9, nesterov=True)
  model.compile(loss='mean_squared_error', optimizer='adam')
@@ -423,44 +461,66 @@ def stable_network():
 
 
 
+def make_model_2(trained_model):
+    
+    inp = Input(1)
 
+    m = make_model_1()
+    m.set_weights(trained_model.get_weights())
+    out1 = m(inp)
+    
+    l2 = Dense(150, activation = 'elu')(inp)
+    out2 = Dense(1)(l2)
+    bucket = tf.stack([out1, out2], axis=2)
+    out = tf.keras.backend.squeeze(Dense(1)(bucket), axis = 2)
+    model2 = Model(inp, out)
+    
+    return model2
+
+def make_model_3():
+    
+    inp = Input(1)
+
+    l1 = Dense(150, activation = 'tanh')(inp)
+    out1 = Dense(1)(l1)
+    model1 = Model(inp, out1)
+    
+    return model1
+
+def make_model_1():
+    
+    inp = Input(1)
+
+    l1 = Dense(150, activation = 'tanh')(inp)
+    out1 = Dense(1)(l1)
+
+    l3 = Dense(150, activation = 'tanh')(out1)
+    out3 = Dense(1)(l3)
+    model1 = Model(inp, out1, out3)
+    
+    return model1
 
 def NewThreeNetwork ():
- url=PythonApplication1.message.get()
- dff = pd.read_csv(url, names=['val','vale'],decimal='.', delimiter=',', dayfirst=True)
-
-
- x=dff['val'].to_numpy()
- y=dff['vale'].to_numpy()
+ x=file_acceptance()[0]
+ y=file_acceptance ()[1]
  
+ model1 = make_model_1()
+ model1.compile(optimizer = keras.optimizers.Adam(),
+               loss = keras.losses.mean_squared_error)
+ model1.fit(x, y, epochs = 300, batch_size = 500)
+ model2 = make_model_2(model1)
+ model2.summary()
 
+ model2.compile(optimizer = keras.optimizers.Adam(),
+               loss = keras.losses.mean_squared_error)
 
- model_one=stable_network()
- model_one.fit(x, y, epochs=100, batch_size=2000)
- model_one.save_weights('E:\my_model.h5')
- print(model_one.get_weights()[3])
- model_two = Sequential()
- #model_two.load_weights('E:\my_model.h5')
- initializer = keras.initializers.HeNormal(seed=None)
- model_two.add(Dense(1,activation='elu',kernel_initializer=set_weights(model_one.get_weights()[3])))
-
- model_two.add(Dense(1024, activation='tanh'))
- model_two.add(Dense(512, activation='tanh')) 
- model_two.add(Dense(1, activation='elu'))
-
- sgd = keras.optimizers.SGD(lr=0.01, momentum=0.9, nesterov=True)
-
- model_two.compile(loss='mean_squared_error', optimizer='adam')
- #model_two.load_weights('E:\my_model.h5', by_name=True)
- model_two.fit(x, y, epochs=500, batch_size=2000)
- 
-
+ model2.fit(x, y, epochs = 300, batch_size = 500)
 
  plt.scatter(x, y)
  #xx=[]
  
  xx=np.arange(min(x)-10, (max(x)+max(x)//2), 0.1)
- plt.scatter(xx, model.predict(xx), s=1)
+ plt.scatter(xx, model2.predict(xx), s=1)
  plt.show() 
 
 
@@ -477,8 +537,8 @@ def conclusion_MSE(a): #выводит сообщение
 def PodborZnacheny():# тандем НС
 
  #url='E:/data3.csv'
- url=PythonApplication1.message.get()
- dff = pd.read_csv(url, names=['val','vale'],decimal='.', delimiter=',', dayfirst=True)
+ x_files=file_acceptance()[0]
+ y_files=file_acceptance ()[1]
 
  fun_active_all=['relu','tanh','elu','softmax','selu','softplus','softsign','sigmoid','hard_sigmoid','linear'] 
  fun_optimizers_all=['RMSprop', 'sgd', 'adam', 'Nadam','Adamax','Adadelta', 'Adagrad']
