@@ -55,13 +55,13 @@ message_button = Button(text="Запуск", command=metods.choiceCombobox)
 message_button.place(relx=.5, rely=.5, anchor="c")
 
 comboExample = ttk.Combobox(root, 
-                            values=["PodborZnacheny",
+                            values=["RNN",
+                                    "PodborZnacheny",
                                     "NewOneNetwork", 
                                     "Polinel",
                                     "probanerset",
                                     "Lineq",
-                                    "NewTwoNetwork",
-                                    "NewThreeNetwork",
+                                    "TandemNN",
                                     "NewFourNetwork",
                                     "NewFiveNetwork"],
                             state="readonly")

@@ -8,6 +8,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{676C3A22-1A24-42D3-B33F-594E6760DA8A}"
 	ProjectSection(SolutionItems) = preProject
 		..\data1.xlsx = ..\data1.xlsx
+		E:\data3.csv = E:\data3.csv
 	EndProjectSection
 EndProject
 Global

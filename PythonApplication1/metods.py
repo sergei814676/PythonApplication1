@@ -6,7 +6,7 @@ import pandas as pd
 import numpy as np
 import tensorflow
 import tensorflow as tf
-
+from tensorflow.keras import regularizers
 from tkinter import *
 from tkinter import messagebox
 import tkinter as tk
@@ -28,51 +28,123 @@ import time, os, argparse, io
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
 from keras.layers import Embedding
-from keras.layers import LSTM
+from keras.layers import LSTM, Conv1D, Dropout
 from keras.layers import LeakyReLU
 from keras.layers import BatchNormalization
 from tensorflow import keras
 from tensorflow.keras import layers
 import h5py
+from mpl_toolkits.mplot3d import Axes3D
+from tensorflow.keras.callbacks import EarlyStopping
 import openpyxl
 from tensorflow.keras import Model, Input, backend
 from keras.layers import TimeDistributed
+from keras.callbacks import LearningRateScheduler
 dir = os.path.dirname(os.path.realpath(__file__))
 #tf.compat.v1.disable_eager_execution()
 
 
 
+
+def network_plot (model, x, y):
+
+
+ num_rows, num_cols = x.shape
+ if (num_cols==1):
+      plt.scatter(x[:,0], y)
+      xx=np.arange(min(x[:,0]), max(x[:,0]), 0.1)
+      plt.scatter(x[:,0], model.predict(x), s=1)
+      plt.show()
+ if (num_cols==2):
+    fig = plt.figure(figsize=(7, 4))
+    ax_3d = Axes3D(fig)
+    ax_3d.set_xlabel('x')
+    ax_3d.set_ylabel('y')
+    ax_3d.set_zlabel('z')
+    x_0 = np.arange(min(x[:,0]), max(x[:,0]), 0.1)
+    x_1 = np.arange(min(x[:,1]), max(x[:,1]), 0.1)
+    xd=np.ones((len(x_0),2))
+    xd[:,0]=x_0
+    xd[:,1]=x_1
+    yd=np.ones((len(x_0),(len(x_0))))
+    for i in range(0,(len(x_0)-1),1): 
+        for j in  range(0,(len(x_0)-1),1):
+            er=np.ones((1,2))
+            er[0][0]= xd[i,0]
+            er[0][1]= xd[j,1]
+            yd[i][j]=model.predict(er)
+    ax_3d.plot_surface(xd[:,0], xd[:,1],  yd,rstride=5, cstride=5, cmap='plasma')
+    plt.show()
+
+
+def mix_oint(x_files,y_files):  #Перетасовка точек
+ print(np.column_stack([x_files, y_files]))
+ x_rows, x_cols = x_files.shape
+ x_y_shuffle=np.column_stack([x_files, y_files]) 
+ num_rows, num_cols = x_y_shuffle.shape
+ #x_y_shuffle=x_y_shuffle.T
+ np.random.shuffle(x_y_shuffle)
+ #x_y_shuffle=x_y_shuffle.T
+ y=x_y_shuffle[:,num_cols-1]
+ x = np.delete(x_y_shuffle, np.s_[-1:], axis=1)
+ return x,y #перемешивание точек
+
+
+def fit_model(model,x, y):
+ x1,y1=mix_oint(x,y)
+ es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=200)
+ mc = keras.callbacks.ModelCheckpoint('best_model.h5', monitor='val_acc', mode='max', verbose=0, save_best_only=True)
+ model.fit(x1, y1, epochs=4000, batch_size=2000, validation_split=0.1, callbacks=[es, mc])
+ return model #обучение модели
+
+
 def file_acceptance (): #считывание данных из файла
 
- x=[]
- y=[]
 
  url=PythonApplication1.message.get()
  if (url.find(".xlsx",len(url)-5) !=-1):
-    wb_obj = openpyxl.load_workbook(filename = url)
+    WS = pd.read_excel(url)
+    WS_np = np.array(WS)
+    num_rows, num_cols = WS_np.shape
 
-    sheet_obj = wb_obj.active #Выбираем активный лист таблицы(
-    m_row = sheet_obj.max_row
+    x=np.ones((num_rows,num_cols-1))
 
-    for i in range(1, m_row + 1):
-        cell_obj1 = sheet_obj.cell(row=i, column=1) # В column= подставляем номер нужной колонки
-        cell_obj2 = sheet_obj.cell(row=i, column=2)
+   #  for number in range(1,num_cols-1,1):
+     #    x[:,number]
+    #    np.append(x, datnp[number], axis=1)
+    y=WS_np[:,num_cols-1]
+    x = np.delete(WS_np, np.s_[-1:], axis=1)
+
+    #wb_obj = openpyxl.load_workbook(filename = url)
+
+    #sheet_obj = wb_obj.active #Выбираем активный лист таблицы(
+    #m_row = sheet_obj.max_row
+
+    #for i in range(1, m_row + 1):
+    #    cell_obj1 = sheet_obj.cell(row=i, column=1) # В column= подставляем номер нужной колонки
+    #    cell_obj2 = sheet_obj.cell(row=i, column=2)
     
-        x.append(cell_obj1.value)
-        y.append(cell_obj2.value)
+     #   x.append(cell_obj1.value)
+    #    y.append(cell_obj2.value)
  if (url.find(".csv",len(url)-5) !=-1):
-     dff = pd.read_csv(url, names=['val','vale'],decimal='.', delimiter=',', dayfirst=True)
-     x=dff['val'].to_numpy()
-     y=dff['vale'].to_numpy()
+     dff = pd.read_csv(url, decimal='.', delimiter=',', dayfirst=True)
+    
+     datnp=dff.to_numpy()
+     num_rows, num_cols = datnp.shape
+     x=np.ones((len(datnp[:,0]),num_cols-1))
 
- Data=np.zeros(shape=(2,len(x)))
- Data[0]=x[:]
- Data[1]=y[:]
- return Data
+   #  for number in range(1,num_cols-1,1):
+     #    x[:,number]
+    #    np.append(x, datnp[number], axis=1)
+     y=datnp[:,num_cols-1]
+     x = np.delete(datnp, np.s_[-1:], axis=1)
+   #  x=np.delete(datnp,1, num_cols-1)
+
+
+
+ return x,y
 
  #dff = pd.read_table(url, names=['val','vale'],decimal='.', delimiter=',')
-
-
 
 
 def postroenie ():#��������
@@ -136,9 +208,6 @@ def postroenie ():#��������
  y_learned = x_train*w_val
  plt.plot(x_train, y_learned, 'r')
  plt.show()
-
-
-
 
 def postroeniepolin (): #������� ������ �� ��������
  #url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ_Mv5MB1Ty1ixEnsXeDJwz0_31rQ1woLrfvmT-SSRuqcUybp6cTy8CgqncjtYxC41ZG5HlzPqUN0au/pub?gid=0&single=true&output=csv'
@@ -212,7 +281,6 @@ def postroeniepolin (): #������� ������ �� ���
  plt.plot(trX, trY2, 'r')
  plt.show()
 
-
 class SeriesPredictor:
     def __init__(self, input_dim, seq_size, hidden_dim=10):
  
@@ -263,8 +331,6 @@ class SeriesPredictor:
             save_path = self.saver.save(sess, 'model.ckpt')
             print('Model saved to {}'.format(save_path))
 
-
-
 def probanerset ():
  #if __name__ == '__main__':
     predictor = SeriesPredictor(input_dim=1, seq_size=4, hidden_dim=10)
@@ -279,55 +345,27 @@ def probanerset ():
               [[4], [5], [6], [7]]]
     predictor.test(test_x)
 
-
 def NewOneNetwork (): 
 
- x=file_acceptance()[0]
- y=file_acceptance ()[1]
 
- #x=sheet['A'].value
-# y=sheet['B'].value
- #x=dff['val'].to_numpy()
- #y=dff['vale'].to_numpy()
-# Define model
- 
- few_neurons=len(x)
+ x,y=file_acceptance()
+
+
+
  model = Sequential()
- initializer = keras.initializers.HeNormal(seed=None)
- model.add(Dense(512, input_dim=1, activation='tanh'))
+ x_rows, x_cols = x.shape
+
+ model.add(Dense(x_cols*20,  activation='tanh'))
  model.add(Dense(1024, activation='tanh'))
- model.add(Dense(512, activation='tanh')) 
- model.add(Dense(1, activation='linear'))
+ model.add(Dense(512, activation='linear')) 
+ model.add(Dense(1,'relu'))
 
- sgd = keras.optimizers.SGD(lr=0.01, momentum=0.9, nesterov=True)
+
  model.compile(loss='mean_squared_error', optimizer='adam')
- model.fit(x, y, epochs=3000, batch_size=2000)
-
-# predictions = model.predict([10, 5, 200, 13])
- #print(predictions) # Approximately 100, 25, 40000, 169
+ model=fit_model(model,x, y)
  
- 
- """
- plt.subplot(2, 1, 1)
- plt.scatter(x, y, s = 1)
- plt.title('y = $x^2$')
- plt.ylabel('Real y')
+ network_plot (model, x, y)
 
- plt.subplot(2, 1, 2)
- plt.scatter(x, model.predict(x), s = 1)
- plt.xlabel('x')
- plt.ylabel('Approximated y')
- plt.show()
- """
-
-
- plt.scatter(x, y)
- #xx=[]
-
-
- xx=np.arange(min(x), max(x), 0.1)
- plt.scatter(xx, model.predict(xx), s=1)
- plt.show()
 
 
 def NewFourNetwork(): #сеть LSTM
@@ -378,11 +416,11 @@ def NewFourNetwork(): #сеть LSTM
 
 
 
- plt.scatter(x, y)
+ plt.scatter(x[:,0], y)
  #xx=[]
 
 
- xx=np.arange(min(x), (max(y)+max(x)//2), 0.1)
+ xx=np.arange(min(x[:,0]), (max(x[:,0])+max(x[:,0])//2), 0.1)
  plt.scatter(xx, model.predict(xx), s=1)
  plt.show() 
 
@@ -410,38 +448,107 @@ def make_model(input_shape):
     return keras.models.Model(inputs=input_layer, outputs=output_layer)
 
 
+def step_decay(epoch):
+    lrate = 0.001
+    if epoch > 16:
+        lrate = 0.0005
+    if epoch > 32:
+        lrate = 0.0001
+    if epoch > 45:
+        lrate = 0.00005
+    return lrate
 
 
-def NewTwoNetwork (): #ФУНКЦИЯ,из за которой возможно  ошибка, с выкидыванием
+def split_sequence(sequence, n_steps):
+	X, y = list(), list()
+	for i in range(len(sequence)):
+		# find the end of this pattern
+		end_ix = i + n_steps
+		# check if we are beyond the sequence
+		if end_ix > len(sequence)-1:
+			break
+		# gather input and output parts of the pattern
+		seq_x, seq_y = sequence[i:end_ix], sequence[end_ix]
+		X.append(seq_x)
+		y.append(seq_y)
+	return np.array(X), np.array(y)
+
+
+
+def RNN (): #ФУНКЦИЯ,
 
  #url='E:/data3.csv'
- url=PythonApplication1.message.get()
- dff = pd.read_csv(url, names=['val','vale'],decimal='.', delimiter=',', dayfirst=True)
+ x,y=file_acceptance()
 
- x=dff['val'].to_numpy()
- y=dff['vale'].to_numpy()
 
-# Dimensions of dataset
- model = tf.keras.Sequential(
-  [
-  tf.keras.layers.Dense(100, activation="relu"),
-  tf.keras.layers.Dense(100, activation="relu"),
-  tf.keras.layers.Dense(1, activation="linear"),
-  gpflux.layers.GPLayer(
-  kernel, inducing_variable, num_data=num_data,
-  num_latent_gps=output_dim
-  ),
-  gpflux.layers.GPLayer(
-  kernel, inducing_variable, num_data=num_data,
-  num_latent_gps=output_dim
-  ),
-  likelihood_container,
-  ]
- )
- model.fit(x_training, y_training, epochs=200, batch_size=512)
- plt.scatter(x, y)
- 
- xx=np.arange(min(x), (max(x)+max(x)//2), 0.1)
+
+ x_y_shuffle=np.ones((2,len(x_files))) #Перетасовка точек
+
+ x_y_shuffle[0]=x_files.copy()
+
+ x_y_shuffle[1]=y_files.copy()
+
+ x_y_shuffle=x_y_shuffle.T
+
+ #np.random.shuffle(x_y_shuffle)
+
+ x_y_shuffle=x_y_shuffle.T
+
+ x=x_y_shuffle[0]
+
+ y=x_y_shuffle[1]
+
+ x_training1=np.split(x, [0, (len(x)//4)*3])#разделение массивов на обучающую и тестовые выборки ( в пропорции75%/25%)
+
+ y_training1=np.split(y, [0, (len(x)//4)*3])# с помощь команды split можно разделить массив с n-го элемента до m-го элемента
+
+ x=x_training1[1]
+
+ y=y_training1[1]
+
+ x_test=x_training1[2]
+
+ y_test=y_training1[2]
+
+ look_back=1
+ step = 4
+ top_words = 5000
+ max_review_length = 500
+ embedding_vecor_length = 32
+# lx=len(x)
+ x = np.expand_dims(x, 1) 
+# y = np.expand_dims(y, 1)
+
+ y_raz,y1_raz = split_sequence(y, 3)
+
+
+ model = Sequential()
+
+
+ model.add(layers.Embedding(input_dim=1024, output_dim=4))
+ model.add(layers.GRU(128, return_sequences=True,activation="tanh",dropout=0.5))
+ model.add(LSTM(64,activation="tanh",dropout=0.1 , input_shape=(1, 1)))
+    #model.add(SimpleRNN(256))
+# model.add(Dropout(0.2))
+# model.add(SimpleRNN(256,activation="tanh",dropout=0.8))
+
+# model.add(Dropout(0.2))
+ model.add(Dense(100, activation='tanh'))
+ model.add(Dense(1, activation='elu'))
+
+ model.compile(loss='mse', optimizer='adam',metrics=['accuracy'])
+ model.summary()
+ reduce_lr = keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.2,
+                              patience=5, min_lr=0.001)
+ model.fit(x, y, epochs=500, batch_size=50,verbose=2, 
+          validation_data=(x_test, y_test),
+          shuffle=True,
+          callbacks=[reduce_lr],validation_split=0.1)
+
+
+ plt.scatter(x, y, s=7)
+ plt.scatter(x_test, y_test, s=7)
+ xx=np.arange(min(x_files), (max(x_files)+max(x_files)//2), 0.01)
 
  plt.scatter(xx, model.predict(xx), s=1)
  plt.show() 
@@ -461,74 +568,98 @@ def stable_network():
 
 
 
+def make_model_3(): 
+    model = Sequential()
+    initializer = keras.initializers.HeNormal(seed=None)
+    model.add(Dense(100, input_dim=1, activation='linear'))
+    model.add(Dense(1024, activation='tanh'))
+    model.add(Dense(512, activation='tanh')) 
+    model.add(Dense(1, activation='tanh'))
+    model.compile(loss='mean_squared_error', optimizer='adam')
+    return model
+
+def make_model_4(trained_model): #ОШИБКА РАЗМЕРНОСТИ
+    model = Sequential()
+    q51=np.zeros((1,1))
+    q51[0][0]=trained_model.get_weights()[7]
+    initializer = keras.initializers.HeNormal(seed=None)
+    model.add(Dense(1, input_dim=1, activation='tanh', use_bias=False, trainable=False))
+
+    print('1 model:')
+    print(q51)
+    print('2 model:')
+    print(model.get_weights()[0])
+    model.layers[0].set_weights(q51[0][0]) #ОШИБКА РАЗМЕРНОСТИ ТУТ, ЧТО БЫ ПРОВЕРИТЬ НАДО ЗАГРУЗИТЬ С ФАЙЛА И ЗАПУСТИТЬ TandemNN
+    model.add(Dense(1024, activation='tanh'))
+    model.add(Dense(512, activation='tanh')) 
+    model.add(Dense(1, activation='elu'))
+    model.compile(loss='mean_squared_error', optimizer='adam')
+    return model
+
+
+
 def make_model_2(trained_model):
     
-    inp = Input(1)
-
+    inp = Input(shape=(1,), name='dense_1')
+    #inp.set_weights(trained_model.get_weights()[4])
     m = make_model_1()
-    m.set_weights(trained_model.get_weights())
-    out1 = m(inp)
-    
-    l2 = Dense(150, activation = 'elu')(inp)
-    out2 = Dense(1)(l2)
-    bucket = tf.stack([out1, out2], axis=2)
-    out = tf.keras.backend.squeeze(Dense(1)(bucket), axis = 2)
+   # m.set_weights(trained_model.get_weights())
+    #print (np.shape(trained_model.get_weights()[5]))
+    q51=(trained_model.get_weights()[4].copy)
+ #   inp.set_weights(trained_model.get_weights()[0])
+    l2 = Dense(300, activation = 'relu',weights=[q51], trainable=False)(inp)
+
+    l3 = Dense(600, activation = 'relu')(l2)
+   
+
+    out = Dense(1, activation = 'elu')(l3)
+    #bucket = tf.stack([out1, out2], axis=2)
+    #out = tf.keras.backend.squeeze(Dense(1)(bucket), axis = 2)
     model2 = Model(inp, out)
+    q5=(trained_model.get_weights()[4])
     
+    q66=(model2.get_weights()[0])
+    print(model2.get_weights()[0])
+ 
+    q77=q5[1]
+    
+    #model2.layers[0].set_weights([q5.T, np.ones(model2.layers[0].get_weights()[0].shape)])
     return model2
-
-def make_model_3():
-    
-    inp = Input(1)
-
-    l1 = Dense(150, activation = 'tanh')(inp)
-    out1 = Dense(1)(l1)
-    model1 = Model(inp, out1)
-    
-    return model1
 
 def make_model_1():
     
     inp = Input(1)
 
-    l1 = Dense(150, activation = 'tanh')(inp)
-    out1 = Dense(1)(l1)
+    l1 = Dense(200, activation = 'sigmoid')(inp)
 
-    l3 = Dense(150, activation = 'tanh')(out1)
+
+    l3 = Dense(300, activation = 'sigmoid')(l1)
     out3 = Dense(1)(l3)
-    model1 = Model(inp, out1, out3)
+    model1 = Model(inp, out3)
     
     return model1
 
-def NewThreeNetwork ():
- x=file_acceptance()[0]
- y=file_acceptance ()[1]
+def TandemNN ():
+ x,y=file_acceptance()
  
- model1 = make_model_1()
+ model1 = make_model_3()
  model1.compile(optimizer = keras.optimizers.Adam(),
                loss = keras.losses.mean_squared_error)
- model1.fit(x, y, epochs = 300, batch_size = 500)
- model2 = make_model_2(model1)
+ model1.fit(x, y, epochs = 50, batch_size = 500)
+ model2 = make_model_4(model1)
  model2.summary()
 
  model2.compile(optimizer = keras.optimizers.Adam(),
                loss = keras.losses.mean_squared_error)
 
- model2.fit(x, y, epochs = 300, batch_size = 500)
+ model2.fit(x, y, epochs = 50, batch_size = 500)
 
  plt.scatter(x, y)
  #xx=[]
  
- xx=np.arange(min(x)-10, (max(x)+max(x)//2), 0.1)
+ xx=np.arange(min(x), (max(x)+max(x)//2), 0.1)
  plt.scatter(xx, model2.predict(xx), s=1)
  plt.show() 
-
-
-
-
-
-
-
 
 def conclusion_MSE(a): #выводит сообщение
         msg = a
@@ -537,8 +668,7 @@ def conclusion_MSE(a): #выводит сообщение
 def PodborZnacheny():# тандем НС
 
  #url='E:/data3.csv'
- x_files=file_acceptance()[0]
- y_files=file_acceptance ()[1]
+ x,y=file_acceptance()
 
  fun_active_all=['relu','tanh','elu','softmax','selu','softplus','softsign','sigmoid','hard_sigmoid','linear'] 
  fun_optimizers_all=['RMSprop', 'sgd', 'adam', 'Nadam','Adamax','Adadelta', 'Adagrad']
@@ -648,18 +778,6 @@ def PodborZnacheny():# тандем НС
  plt.show() 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 def choiceCombobox():#выбор функции
      if PythonApplication1.comboExample.get() == "probanerset":
              probanerset()
@@ -669,10 +787,10 @@ def choiceCombobox():#выбор функции
              postroeniepolin()
      if PythonApplication1.comboExample.get() == "NewOneNetwork":
              NewOneNetwork()
-     if PythonApplication1.comboExample.get() == "NewTwoNetwork":
-             NewTwoNetwork()
-     if PythonApplication1.comboExample.get() == "NewThreeNetwork":
-             NewThreeNetwork()
+     if PythonApplication1.comboExample.get() == "RNN":
+             RNN()
+     if PythonApplication1.comboExample.get() == "TandemNN":
+             TandemNN()
      if PythonApplication1.comboExample.get() == "NewFourNetwork":
              NewFourNetwork()
      if PythonApplication1.comboExample.get() == "NewFiveNetwork":
