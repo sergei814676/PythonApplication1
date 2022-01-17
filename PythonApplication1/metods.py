@@ -40,29 +40,111 @@ import openpyxl
 from tensorflow.keras import Model, Input, backend
 from keras.layers import TimeDistributed
 from keras.callbacks import LearningRateScheduler
+import os
+import originpro as op
+import csv
+from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
+from PyQt5 import QtWidgets
+
+
 dir = os.path.dirname(os.path.realpath(__file__))
 #tf.compat.v1.disable_eager_execution()
 
+def columUnity (x,y,z):
+    x_0=np.ones((0))
+    y_0=np.ones((0))
+    z_0=np.ones((0))
+
+    for i in  range(0,(len(x)-1),1):
+            x_0=np.append(x_0,x)
+            
+            z_0=np.append(z_0,z[:,i])
+            for j in  range(0,(len(x)),1):
+                y_0=np.append(y_0,y[i])
+           
+    return x_0,y_0,z_0
 
 
+def mypolit_plot(model, x, y, history):
 
-def network_plot (model, x, y):
 
-
- num_rows, num_cols = x.shape
- if (num_cols==1):
+  num_rows, num_cols = x.shape
+  
+  if (num_cols==1):
+      plt.subplot (2, 1, 1)
       plt.scatter(x[:,0], y)
       xx=np.arange(min(x[:,0]), max(x[:,0]), 0.1)
       plt.scatter(x[:,0], model.predict(x), s=1)
+      plt.subplot (2, 1, 2)
+      plt.plot(history.history['loss'], label='train')
+      plt.plot(history.history['val_loss'], label='test')
+      plt.legend()
+ 
       plt.show()
- if (num_cols==2):
+
+  if (num_cols==0):
+
+     #min(x[:,1]), max(x[:,1]
+      x_0 = np.arange(0, 15, 0.01)
+      x_1 = np.arange(0, 15, 0.01)
+
+      xd=np.ones((len(x_0),2))
+      xd[:,0]=x_0
+      xd[:,1]=x_1
+      plt.subplot (1, 2, 1)
+      plt.scatter(x[:,0], y, s=1,color='r', label = 'e')
+     
+     # plt.scatter(xd[:,0], model.predict(xd), s=1)
+      #plt.legend()
+      #plt.subplot (1, 3, 2)
+      plt.scatter(x[:,1], y,s=1,color='b', label = 'fi')
+     
+      plt.scatter(xd[:,1], model.predict(xd), s=1,color='k')
+      plt.legend() 
+      
+      plt.subplot (1, 2, 2)
+      plt.plot(history.history['loss'], label='train')
+      plt.plot(history.history['val_loss'], label='test')
+      plt.legend()
+ 
+      plt.show()
+
+  if (num_cols==3):
+
+     #min(x[:,1]), max(x[:,1]
+      x_0 = np.arange(0, 85, 0.01)
+      x_1 = np.arange(0, 85, 0.01)
+      x_1 = np.arange(0, 85, 0.01)
+      xd=np.ones((len(x_0),3))
+      xd[:,0]=x_0
+      xd[:,1]=x_1
+      plt.subplot (1, 2, 1)
+      plt.scatter(x[:,0], y, s=1,color='r', label = 'e')
+     
+     # plt.scatter(xd[:,0], model.predict(xd), s=1)
+      #plt.legend()
+      #plt.subplot (1, 3, 2)
+      plt.scatter(x[:,1], y,s=1,color='b', label = 'fi')
+      plt.scatter(x[:,2], y,s=1,color='b', label = 'fi')     
+      plt.scatter(xd[:,1], model.predict(xd), s=1,color='k')
+      plt.legend() 
+      
+      plt.subplot (1, 2, 2)
+      plt.plot(history.history['loss'], label='train')
+      plt.plot(history.history['val_loss'], label='test')
+      plt.legend()
+ 
+      plt.show()
+
+  if (num_cols==2): #можно поставить 2, что бы рисовать поверзности
     fig = plt.figure(figsize=(7, 4))
     ax_3d = Axes3D(fig)
-    ax_3d.set_xlabel('x')
-    ax_3d.set_ylabel('y')
-    ax_3d.set_zlabel('z')
-    x_0 = np.arange(min(x[:,0]), max(x[:,0]), 0.1)
-    x_1 = np.arange(min(x[:,1]), max(x[:,1]), 0.1)
+    ax_3d.set_xlabel('fi')
+    ax_3d.set_ylabel('e')
+    ax_3d.set_zlabel('C')
+    x_0 = np.arange(1.5, 30, 0.1)
+    x_1 = np.arange(1.5, 30, 0.1)
+
     xd=np.ones((len(x_0),2))
     xd[:,0]=x_0
     xd[:,1]=x_1
@@ -70,11 +152,313 @@ def network_plot (model, x, y):
     for i in range(0,(len(x_0)-1),1): 
         for j in  range(0,(len(x_0)-1),1):
             er=np.ones((1,2))
-            er[0][0]= xd[i,0]
-            er[0][1]= xd[j,1]
+            er[0][0]= xd[j,0]
+            er[0][1]= xd[i,1]
             yd[i][j]=model.predict(er)
-    ax_3d.plot_surface(xd[:,0], xd[:,1],  yd,rstride=5, cstride=5, cmap='plasma')
+    
+    ax_3d.scatter(x[:,0],x[:,1], y,s=7,color='r')
+    xgrid, ygrid = np.meshgrid(xd[:,0], xd[:,1])
+
+    op.exit()
+
+    ax_3d.plot_wireframe(xgrid, ygrid,  yd)
+
     plt.show()
+
+
+def origin_plot(model, x, y, history):
+
+
+  num_rows, num_cols = x.shape
+  if (num_cols==1):
+    op.set_show()
+    wks = op.new_sheet()
+    wks.from_list(0, x[:,0], 'X Values')
+    wks.from_list(1, y, 'Y Values')  
+    gp = op.new_graph()
+    gl = gp[0]
+    gl.add_plot(wks, 1, 0)
+    gl.rescale()
+
+    fpath = op.path('u') + 'simple.png'
+    gp.save_fig(fpath)
+
+  if (num_cols==0):
+      plt.subplot (2, 1, 1)
+      plt.scatter(x[:,0], y)
+      xx=np.arange(min(x[:,0]), max(x[:,0]), 0.1)
+      plt.scatter(x[:,0], model.predict(x), s=1)
+      plt.subplot (2, 1, 2)
+      plt.plot(history.history['loss'], label='train')
+      plt.plot(history.history['val_loss'], label='test')
+      plt.legend()
+ 
+      plt.show()
+
+  if (num_cols==0):
+
+     #min(x[:,1]), max(x[:,1]
+      x_0 = np.arange(0, 15, 0.01)
+      x_1 = np.arange(0, 15, 0.01)
+
+      xd=np.ones((len(x_0),2))
+      xd[:,0]=x_0
+      xd[:,1]=x_1
+      plt.subplot (1, 2, 1)
+      plt.scatter(x[:,0], y, s=1,color='r', label = 'e')
+     
+     # plt.scatter(xd[:,0], model.predict(xd), s=1)
+      #plt.legend()
+      #plt.subplot (1, 3, 2)
+      plt.scatter(x[:,1], y,s=1,color='b', label = 'fi')
+     
+      plt.scatter(xd[:,1], model.predict(xd), s=1,color='k')
+      plt.legend() 
+      
+      plt.subplot (1, 2, 2)
+      plt.plot(history.history['loss'], label='train')
+      plt.plot(history.history['val_loss'], label='test')
+      plt.legend()
+ 
+      plt.show()
+
+  if (num_cols==3):
+
+     #min(x[:,1]), max(x[:,1]
+      x_0 = np.arange(0, 85, 0.01)
+      x_1 = np.arange(0, 85, 0.01)
+      x_1 = np.arange(0, 85, 0.01)
+      xd=np.ones((len(x_0),3))
+      xd[:,0]=x_0
+      xd[:,1]=x_1
+      plt.subplot (1, 2, 1)
+      plt.scatter(x[:,0], y, s=1,color='r', label = 'e')
+     
+     # plt.scatter(xd[:,0], model.predict(xd), s=1)
+      #plt.legend()
+      #plt.subplot (1, 3, 2)
+      plt.scatter(x[:,1], y,s=1,color='b', label = 'fi')
+      plt.scatter(x[:,2], y,s=1,color='b', label = 'fi')     
+      plt.scatter(xd[:,1], model.predict(xd), s=1,color='k')
+      plt.legend() 
+      
+      plt.subplot (1, 2, 2)
+      plt.plot(history.history['loss'], label='train')
+      plt.plot(history.history['val_loss'], label='test')
+      plt.legend()
+ 
+      plt.show()
+
+  if (num_cols==2): #можно поставить 2, что бы рисовать поверзности
+   
+    x_0 = np.arange(1.5, 30, 0.1)
+    x_1 = np.arange(1.5, 30, 0.1)
+
+    xd=np.ones((len(x_0),2))
+    xd[:,0]=x_0
+    xd[:,1]=x_1
+    yd=np.ones((len(x_0),(len(x_0))))
+    for i in range(0,(len(x_0)-1),1): 
+        for j in  range(0,(len(x_0)-1),1):
+            er=np.ones((1,2))
+            er[0][0]= xd[j,0]
+            er[0][1]= xd[i,1]
+            yd[i][j]=model.predict(er)
+    
+
+    x_1,y_1,z_1 = columUnity (xd[:,0],xd[:,1],yd)
+    op.set_show()
+    wks = op.new_sheet()
+    wks.from_list(0, x_1, 'fi Values')
+    wks.from_list(1, y_1, 'e Values')
+    wks.from_list(2, z_1, 'C Values')
+    wks.cols_axis('xyz') 
+
+    # Plot 3D surface
+    gp = op.new_graph(template='glCMAP')
+    p = gp[0].add_plot(wks,coly=1,colx=0,colz=2, type=103) 
+    gp[0].rescale()
+
+    # Plot contour
+    gp = op.new_graph(template='TriContour')
+    p = gp[0].add_plot(wks,coly=1,colx=0,colz=2, type=243)
+    p.colormap = 'Maple.pal'
+   
+def CSV_plot(model, x, y,history):
+    
+    x_0 = np.arange(1.5, 30, 0.1)
+    x_1 = np.arange(1.5, 30, 0.1)
+
+    xd=np.ones((len(x_0),2))
+    xd[:,0]=x_0
+    xd[:,1]=x_1
+    yd=np.ones((len(x_0),(len(x_0))))
+    for i in range(0,(len(x_0)-1),1): 
+        for j in  range(0,(len(x_0)-1),1): 
+            er=np.ones((1,2))
+            er[0][0]= xd[j,0]
+            er[0][1]= xd[i,1]
+            yd[i][j]=model.predict(er)
+    
+
+    x_1,y_1,z_1 = columUnity (xd[:,0],xd[:,1],yd)
+    с_1=np.ones((len(x_1),3))
+    #c = np.concatenate((x_1, y_1), axis=1)
+    с_1[:,0] =x_1
+    с_1[:,1] =y_1
+    с_1[:,2] =z_1
+    #df = pd.from_csv('E:\employee_file.csv')
+    cities = pd.DataFrame(с_1, columns=['X', 'Y', 'Z'])
+    cities.to_csv('E:\employee_file.csv', index=False)
+    #with open('E:\employee_file.csv', mode='w') as employee_file:
+      #  writer = csv.writer(employee_file, delimiter=",")
+      #  employee_writer = csv.writer(employee_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+       # employee_file.writerow(['X', 'Y', 'Z'])
+     #   employee_file.writerow(с1)
+        
+
+
+
+
+def network_plot (model, x, y,history):
+  if PythonApplication1.comboExample1.get() == "Майполит":
+             mypolit_plot(model, x, y,history)
+  if PythonApplication1.comboExample1.get() == "Ориджин":
+             origin_plot(model, x, y,history)
+  if PythonApplication1.comboExample1.get() == "CSV":
+             CSV_plot(model, x, y,history)
+
+
+
+
+  num_rows, num_cols = x.shape
+  if (num_cols==0):
+    op.set_show()
+    wks = op.new_sheet()
+    wks.from_list(0, x[:,0], 'X Values')
+    wks.from_list(1, y, 'Y Values')  
+    gp = op.new_graph()
+    gl = gp[0]
+    gl.add_plot(wks, 1, 0)
+    gl.rescale()
+
+    fpath = op.path('u') + 'simple.png'
+    gp.save_fig(fpath)
+
+  if (num_cols==0):
+      plt.subplot (2, 1, 1)
+      plt.scatter(x[:,0], y)
+      xx=np.arange(min(x[:,0]), max(x[:,0]), 0.1)
+      plt.scatter(x[:,0], model.predict(x), s=1)
+      plt.subplot (2, 1, 2)
+      plt.plot(history.history['loss'], label='train')
+      plt.plot(history.history['val_loss'], label='test')
+      plt.legend()
+ 
+      plt.show()
+
+  if (num_cols==0):
+
+     #min(x[:,1]), max(x[:,1]
+      x_0 = np.arange(0, 15, 0.01)
+      x_1 = np.arange(0, 15, 0.01)
+
+      xd=np.ones((len(x_0),2))
+      xd[:,0]=x_0
+      xd[:,1]=x_1
+      plt.subplot (1, 2, 1)
+      plt.scatter(x[:,0], y, s=1,color='r', label = 'e')
+     
+     # plt.scatter(xd[:,0], model.predict(xd), s=1)
+      #plt.legend()
+      #plt.subplot (1, 3, 2)
+      plt.scatter(x[:,1], y,s=1,color='b', label = 'fi')
+     
+      plt.scatter(xd[:,1], model.predict(xd), s=1,color='k')
+      plt.legend() 
+      
+      plt.subplot (1, 2, 2)
+      plt.plot(history.history['loss'], label='train')
+      plt.plot(history.history['val_loss'], label='test')
+      plt.legend()
+ 
+      plt.show()
+
+  if (num_cols==0):
+
+     #min(x[:,1]), max(x[:,1]
+      x_0 = np.arange(0, 85, 0.01)
+      x_1 = np.arange(0, 85, 0.01)
+      x_1 = np.arange(0, 85, 0.01)
+      xd=np.ones((len(x_0),3))
+      xd[:,0]=x_0
+      xd[:,1]=x_1
+      plt.subplot (1, 2, 1)
+      plt.scatter(x[:,0], y, s=1,color='r', label = 'e')
+     
+     # plt.scatter(xd[:,0], model.predict(xd), s=1)
+      #plt.legend()
+      #plt.subplot (1, 3, 2)
+      plt.scatter(x[:,1], y,s=1,color='b', label = 'fi')
+      plt.scatter(x[:,2], y,s=1,color='b', label = 'fi')     
+      plt.scatter(xd[:,1], model.predict(xd), s=1,color='k')
+      plt.legend() 
+      
+      plt.subplot (1, 2, 2)
+      plt.plot(history.history['loss'], label='train')
+      plt.plot(history.history['val_loss'], label='test')
+      plt.legend()
+ 
+      plt.show()
+
+  if (num_cols==0): #можно поставить 2, что бы рисовать поверзности
+    #fig = plt.figure(figsize=(7, 4))
+   # ax_3d = Axes3D(fig)
+   # ax_3d.set_xlabel('fi')
+   # ax_3d.set_ylabel('e')
+   # ax_3d.set_zlabel('C')
+    x_0 = np.arange(1.5, 30, 0.1)
+    x_1 = np.arange(1.5, 30, 0.1)
+
+    xd=np.ones((len(x_0),2))
+    xd[:,0]=x_0
+    xd[:,1]=x_1
+    yd=np.ones((len(x_0),(len(x_0))))
+    for i in range(0,(len(x_0)-1),1): 
+        for j in  range(0,(len(x_0)-1),1):
+            er=np.ones((1,2))
+            er[0][0]= xd[j,0]
+            er[0][1]= xd[i,1]
+            yd[i][j]=model.predict(er)
+    
+    #ax_3d.scatter(x[:,0],x[:,1], y,s=7,color='r')
+    #xgrid, ygrid = np.meshgrid(xd[:,0], xd[:,1])
+    x_1,y_1,z_1 = columUnity (xd[:,0],xd[:,1],yd)
+    op.set_show()
+    wks = op.new_sheet()
+    wks.from_list(0, x_1, 'fi Values')
+    wks.from_list(1, y_1, 'e Values')
+    wks.from_list(2, z_1, 'C Values')
+    wks.cols_axis('xyz') 
+
+    # Plot 3D surface
+    gp = op.new_graph(template='glCMAP')
+    p = gp[0].add_plot(wks,coly=1,colx=0,colz=2, type=103) 
+    gp[0].rescale()
+
+    # Plot contour
+    gp = op.new_graph(template='TriContour')
+    p = gp[0].add_plot(wks,coly=1,colx=0,colz=2, type=243)
+    p.colormap = 'Maple.pal'
+    
+
+
+    #op.exit()
+
+
+    #ax_3d.plot_wireframe(xgrid, ygrid,  yd)
+
+    #plt.show()
 
 
 def mix_oint(x_files,y_files):  #Перетасовка точек
@@ -92,10 +476,10 @@ def mix_oint(x_files,y_files):  #Перетасовка точек
 
 def fit_model(model,x, y):
  x1,y1=mix_oint(x,y)
- es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=200)
+ es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=400)
  mc = keras.callbacks.ModelCheckpoint('best_model.h5', monitor='val_acc', mode='max', verbose=0, save_best_only=True)
- model.fit(x1, y1, epochs=4000, batch_size=2000, validation_split=0.1, callbacks=[es, mc])
- return model #обучение модели
+ history = model.fit(x1, y1, epochs=4000, batch_size=2000, validation_split=0.1, callbacks=[es, mc])
+ return history, model #обучение модели
 
 
 def file_acceptance (): #считывание данных из файла
@@ -357,14 +741,14 @@ def NewOneNetwork ():
 
  model.add(Dense(x_cols*20,  activation='tanh'))
  model.add(Dense(1024, activation='tanh'))
- model.add(Dense(512, activation='linear')) 
- model.add(Dense(1,'relu'))
+ model.add(Dense(512, activation='tanh')) 
+ model.add(Dense(1,'elu'))
 
 
  model.compile(loss='mean_squared_error', optimizer='adam')
- model=fit_model(model,x, y)
+ history, model=fit_model(model,x, y)
  
- network_plot (model, x, y)
+ network_plot (model, x, y,history)
 
 
 
@@ -571,10 +955,10 @@ def stable_network():
 def make_model_3(): 
     model = Sequential()
     initializer = keras.initializers.HeNormal(seed=None)
-    model.add(Dense(100, input_dim=1, activation='linear'))
+    model.add(Dense(512,  activation='tanh'))
     model.add(Dense(1024, activation='tanh'))
-    model.add(Dense(512, activation='tanh')) 
-    model.add(Dense(1, activation='tanh'))
+    model.add(Dense(512, activation='linear')) 
+    model.add(Dense(1,'relu'))
     model.compile(loss='mean_squared_error', optimizer='adam')
     return model
 
@@ -583,20 +967,31 @@ def make_model_4(trained_model): #ОШИБКА РАЗМЕРНОСТИ
     q51=np.zeros((1,1))
     q51[0][0]=trained_model.get_weights()[7]
     initializer = keras.initializers.HeNormal(seed=None)
-    model.add(Dense(1, input_dim=1, activation='tanh', use_bias=False, trainable=False))
+    den=np.ones((1,1))
+    dene=den.tolist()
+
+
+    listOfNumpyArrays = [np.empty(shape = (1,1), dtype = np.float32)]
+    listOfNumpyArrays[0][0] = trained_model.get_weights()[7]
+
+
+
+
+    model.add(Dense(1, input_dim=1, activation='relu', use_bias=False, trainable=False, weights=listOfNumpyArrays))
 
     print('1 model:')
-    print(q51)
+    print(listOfNumpyArrays[0][0])
     print('2 model:')
     print(model.get_weights()[0])
-    model.layers[0].set_weights(q51[0][0]) #ОШИБКА РАЗМЕРНОСТИ ТУТ, ЧТО БЫ ПРОВЕРИТЬ НАДО ЗАГРУЗИТЬ С ФАЙЛА И ЗАПУСТИТЬ TandemNN
+    q52=q51[0:]
+
     model.add(Dense(1024, activation='tanh'))
     model.add(Dense(512, activation='tanh')) 
-    model.add(Dense(1, activation='elu'))
+    model.add(Dense(1, activation='relu'))
     model.compile(loss='mean_squared_error', optimizer='adam')
     return model
 
-
+    
 
 def make_model_2(trained_model):
     
@@ -645,21 +1040,18 @@ def TandemNN ():
  model1 = make_model_3()
  model1.compile(optimizer = keras.optimizers.Adam(),
                loss = keras.losses.mean_squared_error)
- model1.fit(x, y, epochs = 50, batch_size = 500)
+ fit_model(model1,x, y)
+
  model2 = make_model_4(model1)
  model2.summary()
 
  model2.compile(optimizer = keras.optimizers.Adam(),
                loss = keras.losses.mean_squared_error)
 
- model2.fit(x, y, epochs = 50, batch_size = 500)
+ fit_model(model2,x, y)
 
- plt.scatter(x, y)
- #xx=[]
+ network_plot (model2, x, y)
  
- xx=np.arange(min(x), (max(x)+max(x)//2), 0.1)
- plt.scatter(xx, model2.predict(xx), s=1)
- plt.show() 
 
 def conclusion_MSE(a): #выводит сообщение
         msg = a

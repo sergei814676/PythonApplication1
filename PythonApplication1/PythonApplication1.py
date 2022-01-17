@@ -54,6 +54,15 @@ btn_file.place(relx=.8, rely=.1, anchor="c")
 message_button = Button(text="Запуск", command=metods.choiceCombobox)
 message_button.place(relx=.5, rely=.5, anchor="c")
 
+
+comboExample1 = ttk.Combobox(root, 
+                            values=["Ориджин",
+                                    "Майполит",
+                                    "CSV", 
+                                    ],
+                            state="readonly")
+
+
 comboExample = ttk.Combobox(root, 
                             values=["RNN",
                                     "PodborZnacheny",
@@ -66,9 +75,9 @@ comboExample = ttk.Combobox(root,
                                     "NewFiveNetwork"],
                             state="readonly")
 comboExample.place(relx=.5, rely=.8, anchor="c")
-
+comboExample1.place(relx=.5, rely=.7, anchor="c")
 comboExample.current(0)
-
+comboExample1.current(1)
 
 
 tf.disable_v2_behavior()
