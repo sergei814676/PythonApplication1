@@ -3,6 +3,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt 
 import math, random
 import pandas as pd
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import numpy as np
 import tensorflow
 import tensorflow as tf
@@ -50,19 +51,45 @@ from PyQt5 import QtWidgets
 dir = os.path.dirname(os.path.realpath(__file__))
 #tf.compat.v1.disable_eager_execution()
 
+
+def columUnity_x_y (x,y):
+    x_0=np.ones((0))
+    y_0=np.ones((0))
+
+    for i in  range(0,(len(x)),1):
+            y_0=np.append(y_0,y)
+           
+            for j in  range(0,(len(x)),1):
+                x_0=np.append(x_0,x[i])
+           
+    return x_0,y_0
+
 def columUnity (x,y,z):
     x_0=np.ones((0))
     y_0=np.ones((0))
     z_0=np.ones((0))
 
-    for i in  range(0,(len(x)-1),1):
-            x_0=np.append(x_0,x)
+    for i in  range(0,(len(x)),1):
+            y_0=np.append(y_0,y)
             
-            z_0=np.append(z_0,z[:,i])
+            z_0=np.append(z_0,z[i:,])
             for j in  range(0,(len(x)),1):
-                y_0=np.append(y_0,y[i])
+                x_0=np.append(x_0,x[i])
            
     return x_0,y_0,z_0
+
+def columUnity_for_2 (z):
+    z_0=z[:,:,0]
+    print(z[1:,:,])
+    print(z[:,1:,])
+    print(z[:,:,1])
+    sh1,sh2,sh3=np.shape(z)
+    for i in  range(1,(sh1-1),1):
+            
+            z_0=np.append(z_0,z[i:,:,],axis = 1)
+            
+           
+    return z_0
 
 
 def mypolit_plot(model, x, y, history):
@@ -71,16 +98,18 @@ def mypolit_plot(model, x, y, history):
   num_rows, num_cols = x.shape
   
   if (num_cols==1):
-      plt.subplot (2, 1, 1)
-      plt.scatter(x[:,0], y)
-      xx=np.arange(min(x[:,0]), max(x[:,0]), 0.1)
-      plt.scatter(x[:,0], model.predict(x), s=1)
-      plt.subplot (2, 1, 2)
-      plt.plot(history.history['loss'], label='train')
-      plt.plot(history.history['val_loss'], label='test')
-      plt.legend()
+      
+      PythonApplication1.grach.draw_plot_2d (model,x,y,history)
+   #   plt.subplot (2, 1, 1)
+    #  plt.scatter(x[:,0], y)
+     # xx=np.arange(min(x[:,0]), max(x[:,0]), 0.1)
+     # plt.scatter(x[:,0], model.predict(x), s=1)
+     # plt.subplot (2, 1, 2)
+    #  plt.plot(history.history['loss'], label='train')
+    #  plt.plot(history.history['val_loss'], label='test')
+    #  plt.legend()
  
-      plt.show()
+      #plt.show()
 
   if (num_cols==0):
 
@@ -137,40 +166,85 @@ def mypolit_plot(model, x, y, history):
       plt.show()
 
   if (num_cols==2): #можно поставить 2, что бы рисовать поверзности
-    fig = plt.figure(figsize=(7, 4))
-    ax_3d = Axes3D(fig)
-    ax_3d.set_xlabel('fi')
-    ax_3d.set_ylabel('e')
-    ax_3d.set_zlabel('C')
-    x_0 = np.arange(1.5, 30, 0.1)
-    x_1 = np.arange(1.5, 30, 0.1)
+  #  if (PythonApplication1.ttt==1):
+      #  fig.close()
+    fig = plt.figure(figsize=(6, 5), dpi=75)
+    print(x)
+    print(y)
 
+    #fig.add_subplot(111)
+   # axx1 = fig.add_subplot(111)
+
+
+   # ax_3d = Axes3D(fig)
+   # ax_3d.set_xlabel('e')
+  #  ax_3d.set_ylabel('fi')
+  #  ax_3d.set_zlabel('C')
+    x_0 = np.arange(0, 110, 1)
+    x_1 = np.arange(0, 110, 1)
+    
     xd=np.ones((len(x_0),2))
     xd[:,0]=x_0
     xd[:,1]=x_1
     yd=np.ones((len(x_0),(len(x_0))))
-    for i in range(0,(len(x_0)-1),1): 
-        for j in  range(0,(len(x_0)-1),1):
-            er=np.ones((1,2))
-            er[0][0]= xd[j,0]
-            er[0][1]= xd[i,1]
-            yd[i][j]=model.predict(er)
+    xshape1, yshape1=np.shape(yd)
+    yd_2=np.ones(((xshape1)*(yshape1),2))
+    yd_3=np.ones(((xshape1),(yshape1),2))
+    r=0
+    for i in range(0,(xshape1),1): 
+        for j in  range(0,(yshape1),1):
+            
+            yd_3[i][j][0]= xd[j,0]
+            yd_3[i][j][1]= xd[i,1]
+            
+            yd_2[r][0]=xd[i,0]
+            yd_2[r][1]= xd[j,1]
+            r+=1
+            #yd[i][j]=model.predict(er)
+
+
+   # x_1,y_1=columUnity_x_y(xd[:,0],xd[:,1])
+    YYY=np.ones(((xshape1)*(yshape1),1))
+    YYY=model.predict(yd_2)
     
-    ax_3d.scatter(x[:,0],x[:,1], y,s=7,color='r')
+    YYY_1=np.ones((len(xd[:,0]),len(xd[:,1])))
+    for i in  range(0,(len(xd[:,1])),1):
+          YYY_1[:,i]=YYY[(i*len(xd[:,1])):(i*len(xd[:,1])+len(xd[:,1])),0]
+
+   # ax_3d.scatter(x[:,0],x[:,1], y,s=15,color='r')
     xgrid, ygrid = np.meshgrid(xd[:,0], xd[:,1])
 
-    op.exit()
+    #op.exit()
+    PythonApplication1.grach.draw_plot_3d(xgrid, ygrid ,  YYY_1,x[:,0],x[:,1], y,history)
+    #ax_3d.plot_wireframe(xgrid, ygrid ,  YYY_1)
 
-    ax_3d.plot_wireframe(xgrid, ygrid,  yd)
+ #   df1 = pd.DataFrame(data1,columns=['Country','GDP_Per_Capita'])
 
-    plt.show()
+   # PythonApplication1.figure1 = plt.Figure(figsize=(8,5), dpi=75)
+
+ #   PythonApplication1.ax1 = PythonApplication1.figure1.add_subplot(111)
+   # ax_3d.plot_wireframe(xgrid, ygrid ,  YYY_1)
+  #  PythonApplication1.ttt=1
+  #  ax = plt.axes(projection='3d')
+    #fig.add_subplot(111)
+  #  ax.plot_surface(xgrid, ygrid ,  YYY_1, lw=0, cmap='copper')
+   # PythonApplication1.bar2 = FigureCanvasTkAgg(fig, PythonApplication1.root)
+    #PythonApplication1.bar2.get_tk_widget().pack(expand=1, anchor=SE, fill=X)
+
+
+  #  df1 = df1[['Country','GDP_Per_Capita']].groupby('Country').sum()
+   # df1.plot(kind='bar', legend=True, ax=ax1)
+   # ax1.set_title('Country Vs. GDP Per Capita')
+
+
+   # plt.show()
 
 
 def origin_plot(model, x, y, history):
 
 
   num_rows, num_cols = x.shape
-  if (num_cols==1):
+  if (num_cols==0):
     op.set_show()
     wks = op.new_sheet()
     wks.from_list(0, x[:,0], 'X Values')
@@ -251,70 +325,97 @@ def origin_plot(model, x, y, history):
 
   if (num_cols==2): #можно поставить 2, что бы рисовать поверзности
    
-    x_0 = np.arange(1.5, 30, 0.1)
-    x_1 = np.arange(1.5, 30, 0.1)
+    x_0 = np.arange(0, 4, 0.01)
+    x_1 = np.arange(0, 4, 0.01)
 
     xd=np.ones((len(x_0),2))
     xd[:,0]=x_0
     xd[:,1]=x_1
     yd=np.ones((len(x_0),(len(x_0))))
-    for i in range(0,(len(x_0)-1),1): 
-        for j in  range(0,(len(x_0)-1),1):
-            er=np.ones((1,2))
-            er[0][0]= xd[j,0]
-            er[0][1]= xd[i,1]
-            yd[i][j]=model.predict(er)
+    xshape1, yshape1=np.shape(yd)
+    r=0
+    yd_2=np.ones(((xshape1)*(yshape1),2))
+
+    for i in range(0,(len(x_0)),1): 
+        for j in  range(0,(len(x_0)),1): 
+
+            yd_2[r][0]=xd[i,0]
+            yd_2[r][1]= xd[j,1]
+            r+=1
+          
+    x_1,y_1=columUnity_x_y(xd[:,0],xd[:,1])
+    YYY=np.ones(((xshape1)*(yshape1),1))
+    YYY=model.predict(yd_2)
     
 
-    x_1,y_1,z_1 = columUnity (xd[:,0],xd[:,1],yd)
     op.set_show()
     wks = op.new_sheet()
-    wks.from_list(0, x_1, 'fi Values')
-    wks.from_list(1, y_1, 'e Values')
-    wks.from_list(2, z_1, 'C Values')
-    wks.cols_axis('xyz') 
+    wks.from_list(0, x_1, PythonApplication1.name_colum[0])
+    wks.from_list(1, y_1, PythonApplication1.name_colum[1])
+    wks.from_list(2, YYY[:,0], PythonApplication1.name_colum[2])
+    wks.cols_axis('xyz')
+    wks1 = op.new_sheet()
+    wks1.from_list(0, x[:,0], PythonApplication1.name_colum[0])
+    wks1.from_list(1, x[:,1], PythonApplication1.name_colum[1])
+    wks1.from_list(2, y, PythonApplication1.name_colum[2])
+
+
+    wks1.cols_axis('xyz') 
 
     # Plot 3D surface
     gp = op.new_graph(template='glCMAP')
     p = gp[0].add_plot(wks,coly=1,colx=0,colz=2, type=103) 
     gp[0].rescale()
 
+    gl_2 = gr[1]
+    p2 = gl_2.add_plot(wks1,  type=103) # X is col A, Y is col C. 202 is Line + Symbol.
+    p2.color = '#ff5833'
+    gl_2.rescale()
+    
+    op.exit()
     # Plot contour
-    gp = op.new_graph(template='TriContour')
-    p = gp[0].add_plot(wks,coly=1,colx=0,colz=2, type=243)
-    p.colormap = 'Maple.pal'
+  #  gp = op.new_graph(template='TriContour')
+  #  p = gp[0].add_plot(wks,coly=1,colx=0,colz=2, type=243)
+   # p.colormap = 'Maple.pal'
    
 def CSV_plot(model, x, y,history):
     
-    x_0 = np.arange(1.5, 30, 0.1)
-    x_1 = np.arange(1.5, 30, 0.1)
+  num_rows, num_cols = x.shape
+  if (num_cols==2):
+    x_0 = np.arange(1, 30, 0.1)
+    x_1 = np.arange(1, 30, 0.1)
 
     xd=np.ones((len(x_0),2))
     xd[:,0]=x_0
     xd[:,1]=x_1
     yd=np.ones((len(x_0),(len(x_0))))
-    for i in range(0,(len(x_0)-1),1): 
-        for j in  range(0,(len(x_0)-1),1): 
-            er=np.ones((1,2))
-            er[0][0]= xd[j,0]
-            er[0][1]= xd[i,1]
-            yd[i][j]=model.predict(er)
-    
+    yd_1=np.ones((len(x_0),(len(x_0)),2))
+    xshape1, yshape1=np.shape(yd)
+    r=0
+    yd_2=np.ones(((xshape1)*(yshape1),2))
 
-    x_1,y_1,z_1 = columUnity (xd[:,0],xd[:,1],yd)
-    с_1=np.ones((len(x_1),3))
+    for i in range(0,(len(x_0)),1): 
+        for j in  range(0,(len(x_0)),1): 
+
+            yd_2[r][0]=xd[i,0]
+            yd_2[r][1]= xd[j,1]
+            r+=1
+          
+    x_1,y_1=columUnity_x_y(xd[:,0],xd[:,1])
+    YYY=np.ones(((xshape1)*(yshape1),1))
+    YYY=model.predict(yd_2)
+   # x_1,y_1,z_1 = columUnity (xd[:,0],xd[:,1],yd)
+    с_1=np.ones((len(YYY[:,0]),3))
+    
     #c = np.concatenate((x_1, y_1), axis=1)
     с_1[:,0] =x_1
     с_1[:,1] =y_1
-    с_1[:,2] =z_1
+    с_1[:,2] =YYY[:,0]
     #df = pd.from_csv('E:\employee_file.csv')
     cities = pd.DataFrame(с_1, columns=['X', 'Y', 'Z'])
+    os.remove('E:\employee_file.csv')
     cities.to_csv('E:\employee_file.csv', index=False)
-    #with open('E:\employee_file.csv', mode='w') as employee_file:
-      #  writer = csv.writer(employee_file, delimiter=",")
-      #  employee_writer = csv.writer(employee_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-       # employee_file.writerow(['X', 'Y', 'Z'])
-     #   employee_file.writerow(с1)
+
         
 
 
@@ -476,9 +577,10 @@ def mix_oint(x_files,y_files):  #Перетасовка точек
 
 def fit_model(model,x, y):
  x1,y1=mix_oint(x,y)
- es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=400)
+# es = EarlyStopping(monitor='loss', mode='min', verbose=0, patience=300)
+ es = EarlyStopping(monitor='val_loss', mode='min', verbose=0, patience=500)
  mc = keras.callbacks.ModelCheckpoint('best_model.h5', monitor='val_acc', mode='max', verbose=0, save_best_only=True)
- history = model.fit(x1, y1, epochs=4000, batch_size=2000, validation_split=0.1, callbacks=[es, mc])
+ history = model.fit(x1, y1, epochs=40000, batch_size=4000, validation_split=0.1,validation_freq=10, callbacks=[es, mc])
  return history, model #обучение модели
 
 
@@ -489,8 +591,9 @@ def file_acceptance (): #считывание данных из файла
  if (url.find(".xlsx",len(url)-5) !=-1):
     WS = pd.read_excel(url)
     WS_np = np.array(WS)
+    print(WS.columns.ravel())
     num_rows, num_cols = WS_np.shape
-
+    PythonApplication1.name_colum=WS.columns.ravel()
     x=np.ones((num_rows,num_cols-1))
 
    #  for number in range(1,num_cols-1,1):
@@ -739,13 +842,13 @@ def NewOneNetwork ():
  model = Sequential()
  x_rows, x_cols = x.shape
 
- model.add(Dense(x_cols*20,  activation='tanh'))
+ model.add(Dense(x_cols*20, activation='tanh'))
  model.add(Dense(1024, activation='tanh'))
- model.add(Dense(512, activation='tanh')) 
+ model.add(Dense(512, activation='elu')) 
  model.add(Dense(1,'elu'))
 
 
- model.compile(loss='mean_squared_error', optimizer='adam')
+ model.compile(loss='mean_squared_error', optimizer='SGD')
  history, model=fit_model(model,x, y)
  
  network_plot (model, x, y,history)
@@ -1171,6 +1274,7 @@ def PodborZnacheny():# тандем НС
 
 
 def choiceCombobox():#выбор функции
+    # PythonApplication1.figure1.clf()
      if PythonApplication1.comboExample.get() == "probanerset":
              probanerset()
      if PythonApplication1.comboExample.get() == "Lineq":
