@@ -180,13 +180,13 @@ def mypolit_plot(model, x, y, history):
    # ax_3d.set_xlabel('e')
   #  ax_3d.set_ylabel('fi')
   #  ax_3d.set_zlabel('C')
-    x_0 = np.arange(0, 110, 1)
-    x_1 = np.arange(0, 110, 1)
+    x_0 = np.arange(min(x[:,0])-0.5, max(x[:,0])+0.5, 0.5)
+    x_1 = np.arange(min(x[:,1])-0.5, max(x[:,1])+0.5, 0.5)
     
     xd=np.ones((len(x_0),2))
     xd[:,0]=x_0
-    xd[:,1]=x_1
-    yd=np.ones((len(x_0),(len(x_0))))
+   # xd[:,1]=x_1
+    yd=np.ones((len(x_0),(len(x_1))))
     xshape1, yshape1=np.shape(yd)
     yd_2=np.ones(((xshape1)*(yshape1),2))
     yd_3=np.ones(((xshape1),(yshape1),2))
@@ -194,11 +194,11 @@ def mypolit_plot(model, x, y, history):
     for i in range(0,(xshape1),1): 
         for j in  range(0,(yshape1),1):
             
-            yd_3[i][j][0]= xd[j,0]
-            yd_3[i][j][1]= xd[i,1]
+            yd_3[i][j][0]= x_0[i]
+            yd_3[i][j][1]=x_1[j]
             
-            yd_2[r][0]=xd[i,0]
-            yd_2[r][1]= xd[j,1]
+            yd_2[r][0]=x_0[i]
+            yd_2[r][1]= x_1[j]
             r+=1
             #yd[i][j]=model.predict(er)
 
@@ -207,15 +207,15 @@ def mypolit_plot(model, x, y, history):
     YYY=np.ones(((xshape1)*(yshape1),1))
     YYY=model.predict(yd_2)
     
-    YYY_1=np.ones((len(xd[:,0]),len(xd[:,1])))
-    for i in  range(0,(len(xd[:,1])),1):
-          YYY_1[:,i]=YYY[(i*len(xd[:,1])):(i*len(xd[:,1])+len(xd[:,1])),0]
+    YYY_1=np.ones((len(x_1),len(x_0)))
+    for i in  range(0,(len(x_0)),1):
+          YYY_1[:,i]=YYY[(i*len(x_1)):(i*len(x_1)+len(x_1)),0]
 
    # ax_3d.scatter(x[:,0],x[:,1], y,s=15,color='r')
-    xgrid, ygrid = np.meshgrid(xd[:,0], xd[:,1])
+    xgrid, ygrid = np.meshgrid(x_0, x_1)
 
     #op.exit()
-    PythonApplication1.grach.draw_plot_3d(xgrid, ygrid ,  YYY_1,x[:,0],x[:,1], y,history)
+    PythonApplication1.grach.draw_plot_3d(xgrid, ygrid ,  YYY_1,x[:,0],x[:,1], y,history,model)
     #ax_3d.plot_wireframe(xgrid, ygrid ,  YYY_1)
 
  #   df1 = pd.DataFrame(data1,columns=['Country','GDP_Per_Capita'])
@@ -273,7 +273,7 @@ def origin_plot(model, x, y, history):
 
      #min(x[:,1]), max(x[:,1]
       x_0 = np.arange(0, 15, 0.01)
-      x_1 = np.arange(0, 15, 0.01)
+      x_1 = np.arange(0, 25, 0.01)
 
       xd=np.ones((len(x_0),2))
       xd[:,0]=x_0
@@ -325,33 +325,33 @@ def origin_plot(model, x, y, history):
 
   if (num_cols==2): #можно поставить 2, что бы рисовать поверзности
    
-    x_0 = np.arange(0, 4, 0.01)
-    x_1 = np.arange(0, 4, 0.01)
+    x_0 = np.arange(min(x[:,0])-0.5, max(x[:,0])+0.5, 0.01)
+    x_1 = np.arange(min(x[:,1])-0.5, max(x[:,1])+0.5, 0.01)
 
     xd=np.ones((len(x_0),2))
     xd[:,0]=x_0
-    xd[:,1]=x_1
-    yd=np.ones((len(x_0),(len(x_0))))
+  #  xd[:,1]=x_1
+    yd=np.ones((len(x_0),(len(x_1))))
     xshape1, yshape1=np.shape(yd)
     r=0
     yd_2=np.ones(((xshape1)*(yshape1),2))
 
     for i in range(0,(len(x_0)),1): 
-        for j in  range(0,(len(x_0)),1): 
+        for j in  range(0,(len(x_1)),1): 
 
-            yd_2[r][0]=xd[i,0]
-            yd_2[r][1]= xd[j,1]
+            yd_2[r][0]=x_0[i]
+            yd_2[r][1]= x_1[j]
             r+=1
           
-    x_1,y_1=columUnity_x_y(xd[:,0],xd[:,1])
+    xx_1,yy_1=columUnity_x_y(x_0,x_1)
     YYY=np.ones(((xshape1)*(yshape1),1))
     YYY=model.predict(yd_2)
     
 
     op.set_show()
     wks = op.new_sheet()
-    wks.from_list(0, x_1, PythonApplication1.name_colum[0])
-    wks.from_list(1, y_1, PythonApplication1.name_colum[1])
+    wks.from_list(0, xx_1, PythonApplication1.name_colum[0])
+    wks.from_list(1, yy_1, PythonApplication1.name_colum[1])
     wks.from_list(2, YYY[:,0], PythonApplication1.name_colum[2])
     wks.cols_axis('xyz')
     wks1 = op.new_sheet()
@@ -367,12 +367,12 @@ def origin_plot(model, x, y, history):
     p = gp[0].add_plot(wks,coly=1,colx=0,colz=2, type=103) 
     gp[0].rescale()
 
-    gl_2 = gr[1]
-    p2 = gl_2.add_plot(wks1,  type=103) # X is col A, Y is col C. 202 is Line + Symbol.
-    p2.color = '#ff5833'
-    gl_2.rescale()
+ #   gl_2 = gr[1]
+#    p2 = gl_2.add_plot(wks1,  type=103) # X is col A, Y is col C. 202 is Line + Symbol.
+#    p2.color = '#ff5833'
+ #   gl_2.rescale()
     
-    op.exit()
+  #  op.exit()
     # Plot contour
   #  gp = op.new_graph(template='TriContour')
   #  p = gp[0].add_plot(wks,coly=1,colx=0,colz=2, type=243)
@@ -382,34 +382,34 @@ def CSV_plot(model, x, y,history):
     
   num_rows, num_cols = x.shape
   if (num_cols==2):
-    x_0 = np.arange(1, 30, 0.1)
-    x_1 = np.arange(1, 30, 0.1)
+    x_0 = np.arange(min(x[:,0])-0.5, max(x[:,0])+0.5, 0.5)
+    x_1 = np.arange(min(x[:,1])-0.5, max(x[:,1])+0.5, 0.5)
 
     xd=np.ones((len(x_0),2))
     xd[:,0]=x_0
-    xd[:,1]=x_1
-    yd=np.ones((len(x_0),(len(x_0))))
-    yd_1=np.ones((len(x_0),(len(x_0)),2))
+ #   xd[:,1]=x_1
+    yd=np.ones((len(x_0),(len(x_1))))
+    yd_1=np.ones((len(x_0),(len(x_1)),2))
     xshape1, yshape1=np.shape(yd)
     r=0
     yd_2=np.ones(((xshape1)*(yshape1),2))
 
     for i in range(0,(len(x_0)),1): 
-        for j in  range(0,(len(x_0)),1): 
+        for j in  range(0,(len(x_1)),1): 
 
-            yd_2[r][0]=xd[i,0]
-            yd_2[r][1]= xd[j,1]
+            yd_2[r][0]=x_0[i]
+            yd_2[r][1]= x_1[j]
             r+=1
           
-    x_1,y_1=columUnity_x_y(xd[:,0],xd[:,1])
+    x_11,y_1=columUnity_x_y(x_0,x_1)
     YYY=np.ones(((xshape1)*(yshape1),1))
     YYY=model.predict(yd_2)
    # x_1,y_1,z_1 = columUnity (xd[:,0],xd[:,1],yd)
     с_1=np.ones((len(YYY[:,0]),3))
     
     #c = np.concatenate((x_1, y_1), axis=1)
-    с_1[:,0] =x_1
-    с_1[:,1] =y_1
+    с_1[:,0] =yd_2[:,0]
+    с_1[:,1] =yd_2[:,1]
     с_1[:,2] =YYY[:,0]
     #df = pd.from_csv('E:\employee_file.csv')
     cities = pd.DataFrame(с_1, columns=['X', 'Y', 'Z'])
@@ -578,9 +578,9 @@ def mix_oint(x_files,y_files):  #Перетасовка точек
 def fit_model(model,x, y):
  x1,y1=mix_oint(x,y)
 # es = EarlyStopping(monitor='loss', mode='min', verbose=0, patience=300)
- es = EarlyStopping(monitor='val_loss', mode='min', verbose=0, patience=500)
+ es = EarlyStopping(monitor='val_loss', mode='min', verbose=0, patience=5000)
  mc = keras.callbacks.ModelCheckpoint('best_model.h5', monitor='val_acc', mode='max', verbose=0, save_best_only=True)
- history = model.fit(x1, y1, epochs=40000, batch_size=4000, validation_split=0.1,validation_freq=10, callbacks=[es, mc])
+ history = model.fit(x1, y1, epochs=90000, batch_size=400, validation_split=0.15,validation_freq=2, callbacks=[es, mc])
  return history, model #обучение модели
 
 
@@ -791,14 +791,15 @@ def NewOneNetwork ():
 
  model = Sequential()
  x_rows, x_cols = x.shape
+ model.add(Dense(x_cols*20, activation='elu')) 
+ #model.add(Dense(x_cols*40, activation='linear'))
+ model.add(Dense(x_cols*20, activation='relu'))
+ #model.add(Dense(x_cols*40, activation='tanh'))
 
- model.add(Dense(x_cols*20, activation='tanh'))
- model.add(Dense(1024, activation='tanh'))
- model.add(Dense(512, activation='elu')) 
  model.add(Dense(1,'elu'))
 
 
- model.compile(loss='mean_squared_error', optimizer='SGD')
+ model.compile(loss='mean_squared_error', optimizer='RMSprop')
  history, model=fit_model(model,x, y)
  
  network_plot (model, x, y,history)

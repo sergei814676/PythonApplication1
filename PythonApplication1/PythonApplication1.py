@@ -21,6 +21,8 @@ from tkinter import ttk
 import metods
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
+from sklearn.metrics import mean_squared_error
+
 
 
 # This is the button callback function
@@ -44,7 +46,7 @@ class Graph_in_indow():
         #self.fig.clear()
 
 
-    def draw_plot_3d (self,x,y,z,x_p,y_p,z_p,history):
+    def draw_plot_3d (self,x,y,z,x_p,y_p,z_p,history,model):
        
         # self.fig.close()
       
@@ -68,6 +70,17 @@ class Graph_in_indow():
        
        xx=np.arange(min(x[:,0]), max(x[:,0]), 0.1)
 
+
+       xy_p=np.ones((len(x_p),2))
+       xy_p[:,0]=x_p
+       xy_p[:,1]=y_p
+
+       MSE_Deviation=mean_squared_error(z_p,model.predict(xy_p))
+
+
+
+       message_entry_Deviation.delete(0,END)
+       message_entry_Deviation.insert(0, MSE_Deviation)
     
        self.bar2.draw()
        
@@ -97,7 +110,8 @@ class Graph_in_indow():
        self.ax.scatter(x[:,0], y,c='#ff7f0e')
        xx=np.arange(min(x[:,0]), max(x[:,0]), 0.1)
        self.ax.plot(xx, model.predict(xx),c='#2ca02c')
-    
+
+
        self.bar2.draw()
 
 
@@ -147,6 +161,78 @@ def choose_file():
         if fl != '':
             message_entry.delete(0, END)
             message_entry.insert(0, fl)
+        
+        x,y=metods.file_acceptance()
+        x_rows, x_cols = x.shape
+        if (x_cols==2):
+            message_entry_interval_x.delete(0)
+            message_entry_from_x.delete(0)
+            message_entry_to_x.delete(0)
+            message_entry_interval_y.delete(0)
+            message_entry_from_y.delete(0)
+            message_entry_to_y.delete(0)
+
+           
+            message_entry_from_x.insert(0, min(x[:,0]))
+            message_entry_to_x.insert(0, max(x[:,0]))
+            
+            message_entry_from_y.insert(0, min(x[:,1]))
+            message_entry_to_y.insert(0, max(x[:,1]))
+            if (max(x[:,0]-min(x[:,0])>10)):
+                  message_entry_interval_x.delete(0,END)
+                  message_entry_interval_x.insert(0, 1)
+            if (max(x[:,1]-min(x[:,1])>10)):
+                  message_entry_interval_y.delete(0,END)
+                  message_entry_interval_y.insert(0, 1)
+
+
+            if (((max(x[:,0])-min(x[:,0]))>1) and ((max(x[:,0])-min(x[:,0]))<=10)):
+                  message_entry_interval_x.delete(0,END)
+                  message_entry_interval_x.insert(0, 0.1)
+            if (((max(x[:,1])-min(x[:,1]))>1) and ((max(x[:,1])-min(x[:,1]))<=10)):
+                  message_entry_interval_y.delete(0,END)
+                  message_entry_interval_y.insert(0, 0.1)
+
+            if (((max(x[:,0])-min(x[:,0]))>0.1) and ((max(x[:,0])-min(x[:,0]))<=10)):
+                  message_entry_interval_x.delete(0,END)
+                  message_entry_interval_x.insert(0, 0.01)
+            if (((max(x[:,1])-min(x[:,1]))>0.1) and ((max(x[:,1])-min(x[:,1]))<=10)):
+                  message_entry_interval_y.delete(0,END)
+                  message_entry_interval_y.insert(0, 0.01)
+
+
+
+        if (x_cols==1):
+            message_entry_interval_x.delete(0)
+            message_entry_from_x.delete(0)
+            message_entry_to_x.delete(0)
+
+
+           
+            message_entry_from_x.insert(0, min(x[:,0]))
+            message_entry_to_x.insert(0, max(x[:,0]))
+  
+            if (max(x)-min(x)>10):
+                  message_entry_interval_x.delete(0,END)
+                  message_entry_interval_x.insert(0, 1)
+          
+
+
+            if ((max(x)-min(x))>1) and (max(x)-min(x)<=10):
+                  message_entry_interval_x.delete(0,END)
+                  message_entry_interval_x.insert(0, 0.1)
+          
+
+            if ((max(x)-min(x))>0.1) and ((max(x)-min(x))<=1):
+                  message_entry_interval_x.delete(0,END)
+                  message_entry_interval_x.insert(0, 0.01)
+         
+
+
+
+
+
+
 
 
 
@@ -177,15 +263,63 @@ new_item.add_command(label='О Создателе' , command=about_the_program)
 menu.add_cascade(label='О программе', menu=new_item)  
 root.config(menu=menu)  
 name_colum=['a','b','c']
-message_input = StringVar()
-message_output = StringVar()
+message_from_x = StringVar()
+message_to_x = StringVar()
+message_interval_x=StringVar()
+message_from_y=StringVar()
+message_to_y=StringVar()
+message_interval_y=StringVar()
+
+message_Deviation=StringVar()
 
 
-message_entry_input = Entry(textvariable=message_input, width=7)
-message_entry_input.place(relx=.1, rely=.5, anchor="c")
 
-message_entry_output = Entry(textvariable=message_output, width=7)
-message_entry_output.place(relx=.2, rely=.5, anchor="c")
+label2 = Label(text="From")
+label2.place(relx=0.04, rely=0.48)
+message = StringVar()
+
+label3 = Label(text="To")
+label3.place(relx=0.14, rely=0.48)
+
+label4 = Label(text="With an interval")
+label4.place(relx=0.04, rely=0.55)
+
+
+label5 = Label(text="From")
+label5.place(relx=0.04, rely=0.60)
+message = StringVar()
+
+label6 = Label(text="To")
+label6.place(relx=0.14, rely=0.60)
+
+label7 = Label(text="With an interval")
+label7.place(relx=0.04, rely=0.65)
+
+label8 = Label(text="Deviation")
+label8.place(relx=0.04, rely=0.75)
+
+message_entry_Deviation = Entry(textvariable=message_Deviation, width=7)
+message_entry_Deviation.place(relx=0.13, rely=0.75)
+
+
+message_entry_interval_y = Entry(textvariable=message_interval_y, width=7)
+message_entry_interval_y.place(relx=0.13, rely=0.65)
+
+message_entry_from_y = Entry(textvariable=message_from_y, width=7)
+message_entry_from_y.place(relx=.1, rely=0.62, anchor="c")
+
+message_entry_to_y = Entry(textvariable=message_to_y, width=7)
+message_entry_to_y.place(relx=.2, rely=0.62, anchor="c")
+
+
+message_entry_interval_x = Entry(textvariable=message_interval_x, width=7)
+message_entry_interval_x.place(relx=0.13, rely=0.55)
+
+message_entry_from_x = Entry(textvariable=message_from_x, width=7)
+message_entry_from_x.place(relx=.1, rely=.5, anchor="c")
+
+message_entry_to_x = Entry(textvariable=message_to_x, width=7)
+message_entry_to_x.place(relx=.2, rely=.5, anchor="c")
 
 #image = ImageTk.PhotoImage(file="strelka levo.png")
 
@@ -193,8 +327,6 @@ message_entry_output.place(relx=.2, rely=.5, anchor="c")
 #message_button.place(relx=1.2, rely=.5, anchor="c")
 
 
- 
-message = StringVar()
  
 message_entry = Entry(textvariable=message)
 message_entry.place(relx=.1, rely=.1, anchor="c")
@@ -229,9 +361,7 @@ comboExample.place(relx=.1, rely=.3, anchor="c")
 comboExample1.place(relx=.1, rely=.4, anchor="c")
 comboExample.current(1)
 comboExample1.current(1)
-data1 = {'Country': ['US','CA','GER','UK','FR'],
-         'GDP_Per_Capita': [45000,42000,52000,49000,47000]
-        }
+
 tf.disable_v2_behavior()
 grach=Graph_in_indow()
 #df1 = pd.DataFrame(data1,columns=['Country','GDP_Per_Capita'])
