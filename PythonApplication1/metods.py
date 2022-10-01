@@ -44,7 +44,7 @@ from keras.callbacks import LearningRateScheduler
 import os
 import originpro as op
 import csv
-from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
+#from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from PyQt5 import QtWidgets
 
 
@@ -181,7 +181,7 @@ def mypolit_plot(model, x, y, history):
   #  ax_3d.set_ylabel('fi')
   #  ax_3d.set_zlabel('C')
     x_0 = np.arange(min(x[:,0])-0.5, max(x[:,0])+0.5, 0.5)
-    x_1 = np.arange(min(x[:,1])-0.5, max(x[:,1])+0.5, 0.5)
+    x_1 = np.arange(min(x[:,1])-0.5, max(x[:,1])+0.5, 0.005)
     
     xd=np.ones((len(x_0),2))
     xd[:,0]=x_0
@@ -324,20 +324,22 @@ def origin_plot(model, x, y, history):
       plt.show()
 
   if (num_cols==2): #можно поставить 2, что бы рисовать поверзности
-   
-    x_0 = np.arange(min(x[:,0])-0.5, max(x[:,0])+0.5, 0.01)
-    x_1 = np.arange(min(x[:,1])-0.5, max(x[:,1])+0.5, 0.01)
+   # max(x[:,0])+10
+    x_0 = np.arange(0.5, 20, 0.1)
+    x_1 = np.arange(0.5, 20, 0.1)
 
-    xd=np.ones((len(x_0),2))
-    xd[:,0]=x_0
+    xd=np.ones((len(x_1),2))
+    xd[:,1]=x_1
   #  xd[:,1]=x_1
     yd=np.ones((len(x_0),(len(x_1))))
     xshape1, yshape1=np.shape(yd)
-    r=0
     yd_2=np.ones(((xshape1)*(yshape1),2))
 
-    for i in range(0,(len(x_0)),1): 
-        for j in  range(0,(len(x_1)),1): 
+    r=0
+
+
+    for i in range(0,(xshape1),1): 
+        for j in  range(0,(yshape1),1):
 
             yd_2[r][0]=x_0[i]
             yd_2[r][1]= x_1[j]
@@ -422,7 +424,7 @@ def CSV_plot(model, x, y,history):
 
 
 def network_plot (model, x, y,history):
-  if PythonApplication1.comboExample1.get() == "Майполит":
+  if PythonApplication1.comboExample1.get() == "Matplotlib":
              mypolit_plot(model, x, y,history)
   if PythonApplication1.comboExample1.get() == "Ориджин":
              origin_plot(model, x, y,history)
@@ -576,9 +578,9 @@ def mix_oint(x_files,y_files):  #Перетасовка точек
 
 
 def fit_model(model,x, y):
- x1,y1=mix_oint(x,y)
+ #x1,y1=mix_oint(x,y)
 # es = EarlyStopping(monitor='loss', mode='min', verbose=0, patience=300)
- es = EarlyStopping(monitor='val_loss', mode='min', verbose=0, patience=5000)
+ es = EarlyStopping(monitor='val_loss', mode='min', verbose=0, patience=50000)
  mc = keras.callbacks.ModelCheckpoint('best_model.h5', monitor='val_acc', mode='max', verbose=0, save_best_only=True)
  history = model.fit(x1, y1, epochs=90000, batch_size=400, validation_split=0.15,validation_freq=2, callbacks=[es, mc])
  return history, model #обучение модели
@@ -803,6 +805,12 @@ def NewOneNetwork ():
  history, model=fit_model(model,x, y)
  
  network_plot (model, x, y,history)
+
+
+
+
+
+
 
 
 

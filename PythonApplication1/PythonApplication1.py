@@ -18,7 +18,13 @@ import tkinter as tk
 from tkinter import messagebox
 import tkinter.filedialog as fd
 from tkinter import ttk
+
+
 import metods
+import class_network_files
+import working_class
+
+
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 from sklearn.metrics import mean_squared_error
@@ -111,7 +117,13 @@ class Graph_in_indow():
        xx=np.arange(min(x[:,0]), max(x[:,0]), 0.1)
        self.ax.plot(xx, model.predict(xx),c='#2ca02c')
 
+       
+       MSE_Deviation=mean_squared_error(y,model.predict(x[:,0]))
 
+
+
+       message_entry_Deviation.delete(0,END)
+       message_entry_Deviation.insert(0, MSE_Deviation)
        self.bar2.draw()
 
 
@@ -151,10 +163,18 @@ class Graph_in_indow():
         #self.bar2 = FigureCanvasTkAgg(self.fig, PythonApplication1.root)
         #self.bar2.get_tk_widget().pack(expand=1, anchor=SE, fill=X)
        
+def rounded_rect(canvas, x, y, w, h, c): #функция для скругления углов
+    canvas.create_arc(x,   y,   x+2*c,   y+2*c,   start= 90, extent=90, style="arc")
+    canvas.create_arc(x+w-2*c, y+h-2*c, x+w, y+h, start=270, extent=90, style="arc")
+    canvas.create_arc(x+w-2*c, y,   x+w, y+2*c,   start=  0, extent=90, style="arc")
+    canvas.create_arc(x,   y+h-2*c, x+2*c,   y+h, start=180, extent=90, style="arc")
+    #canvas.create_line(x+c, y,   x+w-c, y    )
+   # canvas.create_line(x+c, y+h, x+w-c, y+h  )
+   # canvas.create_line(x,   y+c, x,     y+h-c)
+   # canvas.create_line(x+w, y+c, x+w,   y+h-c)
 
 
-
-def choose_file():
+def choose_file():  # считывание файла
         filetypes =[('Файл необходимый', '*.xlsx *.csv'), ('Все файлы', '*')]
         dlg = fd.Open(filetypes = filetypes)
         fl = dlg.show()
@@ -231,15 +251,32 @@ def choose_file():
 
 
 
+network_files_clas= class_network_files.class_network_files()
+existence_working_class=0
+Main_class=working_class.working_class()
 
 
+def new_files():# команды для меню верхнего
+    PythonApplication1.existence_working_class=1
+    network_files_clas.new_network_files() 
 
 
+def save_files():# команды для меню верхнего
+    if (existence_working_class==0):
+        messagebox.showinfo('Информация', 'Нечего сохранять') 
+    if (existence_working_class==1):
+        network_files_clas.save_network_files(message_entry_Name_network.get(),Main_class.Model_main) 
 
+    
+   # messagebox.showinfo('О программе', 'Сохранить?') 
+
+def load_files():# команды для меню верхнего
+    network_files_clas.load_network_files() 
+    PythonApplication1.existence_working_class=1 
 
 
 def about_the_program():
-    messagebox.showinfo('О программе', 'Сделано НСН для НСН') 
+    messagebox.showinfo('О программе','Сделано НСН для НСН' ) 
 
 
 
@@ -253,14 +290,28 @@ def about_the_program():
 root = Tk()
 root.title("Аппроксимация машинным обучением")
 root.geometry("1050x500")
+root.configure(bg='#49A')
 
-
+#canvas = tk.Canvas(root)
+#canvas.pack()
+#rounded_rect(canvas, 20, 20, 60, 40, 10)
+#root.mainloop()
 
 
 menu = Menu(root)  
-new_item = Menu(menu)  
-new_item.add_command(label='О Создателе' , command=about_the_program)  
-menu.add_cascade(label='О программе', menu=new_item)  
+new_item_info = Menu(menu) 
+
+new_item_files = Menu(menu)
+
+new_item_files.add_command(label='Новая сеть' , command=new_files)
+new_item_files.add_command(label='Сохранить сеть' , command=save_files)
+new_item_files.add_command(label='Загрузить сеть' , command=load_files)
+menu.add_cascade(label='Файл', menu=new_item_files)
+
+
+new_item_info.add_command(label='О Создателе' , command=about_the_program)  
+menu.add_cascade(label='О программе', menu=new_item_info)  
+
 root.config(menu=menu)  
 name_colum=['a','b','c']
 message_from_x = StringVar()
@@ -272,31 +323,41 @@ message_interval_y=StringVar()
 
 message_Deviation=StringVar()
 
+label13 = Label(text="Топология нейросети:",bg='#49A')
+label13.place(relx=0.04, rely=0.23)
 
+label12 = Label(text="Визуализация:",bg='#49A')
+label12.place(relx=0.04, rely=0.33)
 
-label2 = Label(text="From")
+label2 = Label(text="Х   От",bg='#49A')
 label2.place(relx=0.04, rely=0.48)
 message = StringVar()
 
-label3 = Label(text="To")
+label3 = Label(text="До",bg='#49A')
 label3.place(relx=0.14, rely=0.48)
 
-label4 = Label(text="With an interval")
+label4 = Label(text="Интервал:",bg='#49A')
 label4.place(relx=0.04, rely=0.55)
 
 
-label5 = Label(text="From")
+label5 = Label(text="Y   От",bg='#49A')
 label5.place(relx=0.04, rely=0.60)
 message = StringVar()
 
-label6 = Label(text="To")
+label6 = Label(text="До", bg='#49A')
 label6.place(relx=0.14, rely=0.60)
 
-label7 = Label(text="With an interval")
+label7 = Label(text="Интервал:", bg='#49A')
 label7.place(relx=0.04, rely=0.65)
 
-label8 = Label(text="Deviation")
+label8 = Label(text="СКО=", bg='#49A')
 label8.place(relx=0.04, rely=0.75)
+
+label8 = Label(text="Имя сети:", bg='#49A')
+label8.place(relx=0.05, rely=0.02)
+
+message_entry_Name_network = Entry(textvariable="Name1", width=20)
+message_entry_Name_network.place(relx=0.13, rely=0.02)
 
 message_entry_Deviation = Entry(textvariable=message_Deviation, width=7)
 message_entry_Deviation.place(relx=0.13, rely=0.75)
@@ -334,13 +395,16 @@ message_entry.place(relx=.1, rely=.1, anchor="c")
 btn_file = Button(text="Выбрать файл", command=choose_file)
 btn_file.place(relx=.2, rely=.1, anchor="c") 
 
-message_button = Button(text="Запуск", command=metods.choiceCombobox)
+message_button = Button(text="Обучение", command=metods.choiceCombobox)
 message_button.place(relx=.1, rely=.2, anchor="c")
 
 
+message_button = Button(text="Результат", command=metods.choiceCombobox)
+message_button.place(relx=.2, rely=.2, anchor="c")
+
 comboExample1 = ttk.Combobox(root, 
                             values=["Ориджин",
-                                    "Майполит",
+                                    "Matplotlib",
                                     "CSV", 
                                     ],
                             state="readonly")
