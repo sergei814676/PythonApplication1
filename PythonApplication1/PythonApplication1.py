@@ -18,7 +18,7 @@ import tkinter as tk
 from tkinter import messagebox
 import tkinter.filedialog as fd
 from tkinter import ttk
-
+import os.path
 
 import metods
 import class_network_files
@@ -52,6 +52,11 @@ class Graph_in_indow():
         #self.fig.clear()
 
 
+   
+
+
+
+
     def draw_plot_3d (self,x,y,z,x_p,y_p,z_p,history,model):
        
         # self.fig.close()
@@ -62,17 +67,35 @@ class Graph_in_indow():
        #self.ax = self.fig.add_subplot(111)
 
      #  self.fig = plt.figure(figsize=(10, 10), dpi=77)
-       self.ax = self.fig.add_subplot(3,1,1) # add an Axes to the figure
+     #  self.ax = self.fig.add_subplot(3,1,1) # add an Axes to the figure
       # PythonApplication1.root.destroy()
       # for item in self.bar2.get_tk_widget().find_all():
       #  self.bar2.get_tk_widget().delete(item)
 
-       self.ax.plot(history.history['loss'], label='train')
-       self.ax.plot(history.history['val_loss'], label='test')
-       self.ax = self.fig.add_subplot(3,1,(2,3),projection='3d')
+     #  self.ax.plot(history.history['loss'], label='train')
+      # self.ax.plot(history.history['val_loss'], label='test')
+
+
+     # np.transpose
+
+       x1=(np.arange(float(PythonApplication1.message_entry_from_x.get()),  float(PythonApplication1.message_entry_to_x.get()), float(PythonApplication1.message_entry_interval_x.get())))
+       y1 =(np.arange(float(PythonApplication1.message_entry_from_y.get()),  float(PythonApplication1.message_entry_to_y.get()), float(PythonApplication1.message_entry_interval_y.get())))
+       
+       self.ax = self.fig.add_subplot(1,1,1,projection='3d')
        
        self.ax.scatter(x_p,y_p,z_p,color='r')
-       self.ax.plot_surface(x, y ,  z, lw=0, cmap='spring')       
+
+       
+       xgrid, ygrid = np.meshgrid(x1, y1)
+       XYpairs = np.dstack([xgrid, ygrid]).reshape(-1, 2)
+       #zgrid= PythonApplication1.Main_class.Model_main.predict([x,y])
+       q1,q2 = np.shape(xgrid)
+       
+       XYpairs2=PythonApplication1.Main_class.Model_main.predict(XYpairs)
+       XYpairs2= np.reshape(XYpairs2,(q1,q2))
+
+
+       self.ax.plot_surface(xgrid, ygrid ,XYpairs2, lw=0, cmap='spring')       
        
        xx=np.arange(min(x[:,0]), max(x[:,0]), 0.1)
 
@@ -90,40 +113,42 @@ class Graph_in_indow():
     
        self.bar2.draw()
        
-
+    
         #self.ax = plt.axes(projection='3d')
 
         #self.bar2 = FigureCanvasTkAgg(self.fig, PythonApplication1.root)
         #self.bar2.get_tk_widget().pack(expand=1, anchor=SE, fill=X)
    
-    def draw_plot_2d (self,model,x,y,history):
+    def draw_plot_2d (self,model):
       # self.fig.close()
       
       # plt.close(self.fig)
        self.fig.clf()
        #self.fig = plt.Figure() # create a figure object
        #self.ax = self.fig.add_subplot(111)
-
+       
+       xx=np.arange(float(message_entry_from_x.get()),  float(message_entry_to_x.get()), float(message_entry_interval_x.get()))
      #  self.fig = plt.figure(figsize=(10, 10), dpi=77)
        self.ax = self.fig.add_subplot(211) # add an Axes to the figure
       # PythonApplication1.root.destroy()
       # for item in self.bar2.get_tk_widget().find_all():
       #  self.bar2.get_tk_widget().delete(item)
 
-       self.ax.plot(history.history['loss'], label='train')
-       self.ax.plot(history.history['val_loss'], label='test')
-       self.ax = self.fig.add_subplot(212)
-       self.ax.scatter(x[:,0], y,c='#ff7f0e')
-       xx=np.arange(min(x[:,0]), max(x[:,0]), 0.1)
+#       self.ax.plot(history.history['loss'], label='train')
+#       self.ax.plot(history.history['val_loss'], label='test')
+#       self.ax = self.fig.add_subplot(212)
+       
+       #x=np.arange(min(x[:,0]), max(x[:,0]), 0.1) # xx=np.arange(min(x[:,0]), max(x[:,0]), 0.1)
        self.ax.plot(xx, model.predict(xx),c='#2ca02c')
 
-       
-       MSE_Deviation=mean_squared_error(y,model.predict(x[:,0]))
+       if (os.path.exists(PythonApplication1.message.get())):
+        x, y = metods.file_acceptance()
+        self.ax.scatter(x[:,0], y,c='#ff7f0e') #self.ax.scatter(x[:,0], y,c='#ff7f0e')
+        MSE_Deviation=mean_squared_error(y,model.predict(x[:,0]))
+        message_entry_Deviation.delete(0,END)
+        message_entry_Deviation.insert(0, MSE_Deviation)
 
 
-
-       message_entry_Deviation.delete(0,END)
-       message_entry_Deviation.insert(0, MSE_Deviation)
        self.bar2.draw()
 
 
@@ -181,10 +206,10 @@ def choose_file():  # считывание файла
         if fl != '':
             message_entry.delete(0, END)
             message_entry.insert(0, fl)
-        
-        x,y=metods.file_acceptance()
-        x_rows, x_cols = x.shape
-        if (x_cols==2):
+        if (os.path.exists(PythonApplication1.message_entry.get())):
+         x,y=metods.file_acceptance()
+         x_rows, x_cols = x.shape
+         if (x_cols==2):
             message_entry_interval_x.delete(0)
             message_entry_from_x.delete(0)
             message_entry_to_x.delete(0)
@@ -222,7 +247,7 @@ def choose_file():  # считывание файла
 
 
 
-        if (x_cols==1):
+         if (x_cols==1):
             message_entry_interval_x.delete(0)
             message_entry_from_x.delete(0)
             message_entry_to_x.delete(0)
@@ -254,7 +279,7 @@ def choose_file():  # считывание файла
 network_files_clas= class_network_files.class_network_files()
 existence_working_class=0
 Main_class=working_class.working_class()
-
+Main_class.Model_main=Main_class.NewOneNetwork()
 
 def new_files():# команды для меню верхнего
     PythonApplication1.existence_working_class=1
@@ -320,11 +345,12 @@ message_interval_x=StringVar()
 message_from_y=StringVar()
 message_to_y=StringVar()
 message_interval_y=StringVar()
-
+message_number_of_epochs=StringVar()
+message_test_percentage=StringVar()
 message_Deviation=StringVar()
 
-label13 = Label(text="Топология нейросети:",bg='#49A')
-label13.place(relx=0.04, rely=0.23)
+#label13 = Label(text="Топология нейросети:",bg='#49A')
+#label13.place(relx=0.04, rely=0.23)
 
 label12 = Label(text="Визуализация:",bg='#49A')
 label12.place(relx=0.04, rely=0.33)
@@ -355,6 +381,24 @@ label8.place(relx=0.04, rely=0.75)
 
 label8 = Label(text="Имя сети:", bg='#49A')
 label8.place(relx=0.05, rely=0.02)
+
+
+
+label9 = Label(text="Кол. эпох",bg='#49A')
+label9.place(relx=0.04, rely=0.80)
+message = StringVar()
+
+label10 = Label(text="% тестовой", bg='#49A')
+label10.place(relx=0.144, rely=0.80)
+
+
+message_entry_number_of_epochs = Entry(textvariable=message_number_of_epochs, width=7)
+message_entry_number_of_epochs.place(relx=0.1, rely=0.8)
+message_entry_number_of_epochs.insert(0,"1000")
+
+message_entry_test_percentage = Entry(textvariable=message_test_percentage, width=7)
+message_entry_test_percentage.place(relx=0.211, rely=0.8)
+message_entry_test_percentage.insert(0,"15")
 
 message_entry_Name_network = Entry(textvariable="Name1", width=20)
 message_entry_Name_network.place(relx=0.13, rely=0.02)
@@ -387,7 +431,11 @@ message_entry_to_x.place(relx=.2, rely=.5, anchor="c")
 #message_button = Button(image=image,command=lambda: print('click'))
 #message_button.place(relx=1.2, rely=.5, anchor="c")
 
+def pzdz():
+    PythonApplication1.Main_class.fit_models()
 
+def nah():
+    PythonApplication1.Main_class.Graph_clas()
  
 message_entry = Entry(textvariable=message)
 message_entry.place(relx=.1, rely=.1, anchor="c")
@@ -395,11 +443,11 @@ message_entry.place(relx=.1, rely=.1, anchor="c")
 btn_file = Button(text="Выбрать файл", command=choose_file)
 btn_file.place(relx=.2, rely=.1, anchor="c") 
 
-message_button = Button(text="Обучение", command=metods.choiceCombobox)
+message_button = Button ( text='Обучение', command = pzdz) #metods.choiceCombobox
 message_button.place(relx=.1, rely=.2, anchor="c")
 
 
-message_button = Button(text="Результат", command=metods.choiceCombobox)
+message_button = Button(text="Результат", command=nah) #metods.choiceCombobox
 message_button.place(relx=.2, rely=.2, anchor="c")
 
 comboExample1 = ttk.Combobox(root, 
@@ -410,21 +458,23 @@ comboExample1 = ttk.Combobox(root,
                             state="readonly")
 
 
-comboExample = ttk.Combobox(root, 
-                            values=["RNN",
+#comboExample = ttk.Combobox(root, 
+                        #    values=["RNN",
                                     #"PodborZnacheny",
-                                    "NewOneNetwork", 
+                               #     "NewOneNetwork", 
                                    # "Polinel",
                                    # "probanerset",
                                    # "Lineq",
-                                    "TandemNN",
-                                    "NewFourNetwork",
-                                    "NewFiveNetwork"],
-                            state="readonly")
-comboExample.place(relx=.1, rely=.3, anchor="c")
+                            #        "TandemNN",
+                            #        "NewFourNetwork",
+                              #      "NewFiveNetwork"],
+                          #  state="readonly")
+#comboExample.place(relx=.1, rely=.3, anchor="c")
 comboExample1.place(relx=.1, rely=.4, anchor="c")
-comboExample.current(1)
+#comboExample.current(1)
 comboExample1.current(1)
+#comboExample1['state'] = 'disabled'
+#comboExample.pack_forget()
 
 tf.disable_v2_behavior()
 grach=Graph_in_indow()

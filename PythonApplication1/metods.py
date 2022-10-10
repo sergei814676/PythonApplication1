@@ -99,7 +99,7 @@ def mypolit_plot(model, x, y, history):
   
   if (num_cols==1):
       
-      PythonApplication1.grach.draw_plot_2d (model,x,y,history)
+      PythonApplication1.grach.draw_plot_2d (model)
    #   plt.subplot (2, 1, 1)
     #  plt.scatter(x[:,0], y)
      # xx=np.arange(min(x[:,0]), max(x[:,0]), 0.1)
@@ -215,6 +215,7 @@ def mypolit_plot(model, x, y, history):
     xgrid, ygrid = np.meshgrid(x_0, x_1)
 
     #op.exit()
+
     PythonApplication1.grach.draw_plot_3d(xgrid, ygrid ,  YYY_1,x[:,0],x[:,1], y,history,model)
     #ax_3d.plot_wireframe(xgrid, ygrid ,  YYY_1)
 
@@ -325,6 +326,17 @@ def origin_plot(model, x, y, history):
 
   if (num_cols==2): #можно поставить 2, что бы рисовать поверзности
    # max(x[:,0])+10
+    
+   
+    x1=(np.arange(float(PythonApplication1.message_entry_from_x.get()),  float(PythonApplication1.message_entry_to_x.get()), float(PythonApplication1.message_entry_interval_x.get())))
+    y1 =(np.arange(float(PythonApplication1.message_entry_from_y.get()),  float(PythonApplication1.message_entry_to_y.get()), float(PythonApplication1.message_entry_interval_y.get())))
+
+    xgrid, ygrid = np.meshgrid(x1, y1)
+    XYpairs = np.dstack([xgrid, ygrid]).reshape(-1, 2)
+    q1,q2 = np.shape(xgrid)
+       
+    XYpairs2=PythonApplication1.Main_class.Model_main.predict(XYpairs)
+   # XYpairs2= np.reshape(XYpairs2,(q1,q2))   
     x_0 = np.arange(0.5, 20, 0.1)
     x_1 = np.arange(0.5, 20, 0.1)
 
@@ -352,9 +364,9 @@ def origin_plot(model, x, y, history):
 
     op.set_show()
     wks = op.new_sheet()
-    wks.from_list(0, xx_1, PythonApplication1.name_colum[0])
-    wks.from_list(1, yy_1, PythonApplication1.name_colum[1])
-    wks.from_list(2, YYY[:,0], PythonApplication1.name_colum[2])
+    wks.from_list(0,  XYpairs[:,0], PythonApplication1.name_colum[0])
+    wks.from_list(1, XYpairs[:,1], PythonApplication1.name_colum[1])
+    wks.from_list(2, XYpairs2[:,0], PythonApplication1.name_colum[2])
     wks.cols_axis('xyz')
     wks1 = op.new_sheet()
     wks1.from_list(0, x[:,0], PythonApplication1.name_colum[0])
@@ -565,7 +577,7 @@ def network_plot (model, x, y,history):
 
 
 def mix_oint(x_files,y_files):  #Перетасовка точек
- print(np.column_stack([x_files, y_files]))
+
  x_rows, x_cols = x_files.shape
  x_y_shuffle=np.column_stack([x_files, y_files]) 
  num_rows, num_cols = x_y_shuffle.shape
@@ -582,7 +594,11 @@ def fit_model(model,x, y):
 # es = EarlyStopping(monitor='loss', mode='min', verbose=0, patience=300)
  es = EarlyStopping(monitor='val_loss', mode='min', verbose=0, patience=50000)
  mc = keras.callbacks.ModelCheckpoint('best_model.h5', monitor='val_acc', mode='max', verbose=0, save_best_only=True)
- history = model.fit(x1, y1, epochs=90000, batch_size=400, validation_split=0.15,validation_freq=2, callbacks=[es, mc])
+
+
+
+
+ history = model.fit(x, y, epochs=90000, batch_size=400, validation_split=0.15,validation_freq=2, callbacks=[es, mc])
  return history, model #обучение модели
 
 
@@ -596,14 +612,14 @@ def file_acceptance (): #считывание данных из файла
     print(WS.columns.ravel())
     num_rows, num_cols = WS_np.shape
     PythonApplication1.name_colum=WS.columns.ravel()
-    x=np.ones((num_rows,num_cols-1))
+    x_files=np.ones((num_rows,num_cols-1))
 
    #  for number in range(1,num_cols-1,1):
      #    x[:,number]
     #    np.append(x, datnp[number], axis=1)
-    y=WS_np[:,num_cols-1]
-    x = np.delete(WS_np, np.s_[-1:], axis=1)
-
+    y_files=WS_np[:,num_cols-1]
+    x_files = np.delete(WS_np, np.s_[-1:], axis=1)
+    return x_files, y_files
     #wb_obj = openpyxl.load_workbook(filename = url)
 
     #sheet_obj = wb_obj.active #Выбираем активный лист таблицы(
@@ -620,18 +636,19 @@ def file_acceptance (): #считывание данных из файла
     
      datnp=dff.to_numpy()
      num_rows, num_cols = datnp.shape
-     x=np.ones((len(datnp[:,0]),num_cols-1))
+     x_files=np.ones((len(datnp[:,0]),num_cols-1))
 
    #  for number in range(1,num_cols-1,1):
      #    x[:,number]
     #    np.append(x, datnp[number], axis=1)
-     y=datnp[:,num_cols-1]
-     x = np.delete(datnp, np.s_[-1:], axis=1)
+     y_files=datnp[:,num_cols-1]
+     x_files = np.delete(datnp, np.s_[-1:], axis=1)
+     return x_files, y_files
    #  x=np.delete(datnp,1, num_cols-1)
 
 
 
- return x,y
+ #return x_files,y_files
 
  #dff = pd.read_table(url, names=['val','vale'],decimal='.', delimiter=',')
 
